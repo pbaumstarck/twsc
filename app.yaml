@@ -1,0 +1,18 @@
+application: unicontroller
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /javascript
+  static_dir: javascript
+
+- url: /css
+  static_dir: css
+  
+- url: /imgs
+  static_dir: imgs
+
+- url: /.*
+  script: twsc.app
