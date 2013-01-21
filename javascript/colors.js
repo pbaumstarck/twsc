@@ -336,6 +336,12 @@ function testMatchColorRange(console) {
 // The principal size for our 'div's
 var principal = 80;
 
+// Returns a string representing a color swatch
+function makeSwatch(color, width, height) {
+    return '<span style="width: ' + width + 'px; height: ' + height + 'px; background-color: ' + color + '; '
+        + 'display: inline-block; border: 1px black solid; align: center; vertical-align: middle;">' + color + '</span>';
+}
+
 // Gets the modules that recognize colors
 function getColorsModules() {
     return [{
@@ -352,8 +358,7 @@ function getColorsModules() {
                 width = principal,
                 height = principal;
             $$.each(colors, function(color, ix) {
-                ret += '<span style="width: ' + width + 'px; height: ' + height + 'px; background-color: ' + color + '; '
-                    + 'display: inline-block; border: 1px black solid; align: center; vertical-align: middle;">' + color + '</span> ';
+                ret += makeSwatch(color, width, height) + " ";
             });
             return ret;
         }
@@ -394,7 +399,9 @@ function getColorsModules() {
                     });
                     ret += '<div style="width: ' + width + 'px; height: ' + height + 'px; background-color: ' + color + '; '
                         + 'display: inline-block; padding: 0px;" '
-                        + 'onmouseover="$(\'#rangeMouseOver\').html(\'' + color + '\')"></div>';
+                        + 'onmouseover="rangeMouseOver(\'' + color + '\')" '
+                        // + (i == 0 || i == nSteps ? 'onmouseout="$(\'#rangeMouseOver\').empty();" ' : '')
+                        + '></div>';
                 }
                 ret += "&nbsp;" + colors[1]
                     + '<br />'
@@ -407,9 +414,14 @@ function getColorsModules() {
     }];
 }
 
+// An event for when someone mouses over a color range div of a certain value
+function rangeMouseOver(color) {
+    $("#rangeMouseOver").html(makeSwatch(color, principal, principal));
+}
+
 if (node) {
     module.exports = {
-        getModules: getColorsModules,
+        //getModules: getColorsModules,
         test: function(console) {
             testMatchColors(console);
             testMatchColorRange(console);

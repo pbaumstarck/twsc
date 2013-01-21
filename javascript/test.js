@@ -22,7 +22,8 @@ console.log = function() {
 }
 
 var tests = [
-    require('./colors.js').test
+    require('./colors.js').test,
+    require('./numbers.js').test
 ];
 $$.each(tests, function(test) {
     test(console);

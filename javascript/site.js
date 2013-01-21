@@ -19,6 +19,7 @@ function getRand(n) {
 var actuate = (function() {
     var modules = 
         getColorsModules()
+        .concat(getNumbersModules())
         .concat(getDefaultModules());
     // Sort them
     modules.sort(function(a, b) {

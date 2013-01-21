@@ -12,6 +12,7 @@ class MainPage(webapp2.RequestHandler):
                     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
                     <script type="text/javascript" src="/javascript/mst.js"></script>
                     <script type="text/javascript" src="/javascript/colors.js"></script>
+                    <script type="text/javascript" src="/javascript/numbers.js"></script>
                     <script type="text/javascript" src="/javascript/site.js"></script>
                 </head>
                 <body>
