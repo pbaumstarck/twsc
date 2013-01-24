@@ -10,10 +10,16 @@ class MainPage(webapp2.RequestHandler):
                     <title>Twin-Screw Universal Controller</title>
                     <link rel="stylesheet" type="text/css" href="/css/main.css">
                     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
+                    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+                    <script type="text/javascript" src="/javascript/jstz.min.js"></script>
                     <script type="text/javascript" src="/javascript/mst.js"></script>
                     <script type="text/javascript" src="/javascript/colors.js"></script>
                     <script type="text/javascript" src="/javascript/numbers.js"></script>
+                    <script type="text/javascript" src="/javascript/plots.js"></script>
                     <script type="text/javascript" src="/javascript/site.js"></script>
+                    <script type="text/javascript">
+                        google.load('visualization', '1.0', {'packages':['corechart']});
+                    </script>
                 </head>
                 <body>
                     <center>

@@ -20,7 +20,8 @@ var actuate = (function() {
     var modules = 
         getColorsModules()
         .concat(getNumbersModules())
-        .concat(getDefaultModules());
+        .concat(getDefaultModules())
+        .concat(getPlottingModules());
     // Sort them
     modules.sort(function(a, b) {
         return -(a.precedence - b.precedence);
@@ -66,6 +67,10 @@ $(document).ready(function() {
             $("#results").show("fast");
         });
     }
+    
+    var tz = jstz.determine(); // Determines the time zone of the browser client
+    tz.name(); // Returns the name of the time zone eg "Europe/Berlin"
+    
     var visible = true;
     $("#twsc").keyup(function(event) {
         // Only respond to the 'Enter' key
