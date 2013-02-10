@@ -143,7 +143,8 @@ function checkMstConsole(value) {
             ep = decodeEpNumber(ep);
             str += (str.length > 0 ? "<br />\n" : "") + epMap[ep.season][ep.number - 1];
         });
-        return "The MST3K episodes you requested are:<br />\n" + str;
+        return "The MST3K episode" + (lookups.length > 1 ? "s" : "") + " you requested "
+            + (lookups.length > 1 ? "are" : "is") + ":<br />\n" + str;
     }
 }
 
