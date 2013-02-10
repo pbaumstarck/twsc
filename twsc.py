@@ -16,6 +16,7 @@ class MainPage(webapp2.RequestHandler):
                     <script type="text/javascript" src="/javascript/colors.js"></script>
                     <script type="text/javascript" src="/javascript/numbers.js"></script>
                     <script type="text/javascript" src="/javascript/plots.js"></script>
+                    <script type="text/javascript" src="/javascript/mst3k.js"></script>
                     <script type="text/javascript" src="/javascript/site.js"></script>
                     <script type="text/javascript">
                         google.load('visualization', '1.0', {'packages':['corechart']});
@@ -27,8 +28,8 @@ class MainPage(webapp2.RequestHandler):
                 	    <input id="twsc" type="textbox" style="width: 400px;" placeholder="Type something"></input>
                 	    <br /> 
                 	    <br /> 
-                        <div id="results"></div>
                     </center>
+                        <div id="results" style="margin-left: auto; margin-right: auto;"></div>
                 </body>
             </html>
             """)

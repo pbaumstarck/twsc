@@ -21,7 +21,8 @@ var actuate = (function() {
         getColorsModules()
         .concat(getNumbersModules())
         .concat(getDefaultModules())
-        .concat(getPlottingModules());
+        .concat(getPlottingModules())
+        .concat(getMst3kModules());
     // Sort them
     modules.sort(function(a, b) {
         return -(a.precedence - b.precedence);

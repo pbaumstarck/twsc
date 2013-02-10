@@ -217,9 +217,19 @@ function checkPlotting(value) {
         'width': chart.width || 640,
         'height': chart.height || 480
     };
+    
+    // Draw a column chart
+    var chart = new google.visualization.ChartWrapper({
+        chartType: "AreaChart",
+        dataTable: data,
+        options: options,
+        containerId: 'results'
+    });
+    chart.draw();
+    $("#results").css("width", 640);
     // Instantiate and draw our chart, passing in some options.
-    var chart = new google.visualization.PieChart(document.getElementById('results'));
-    chart.draw(data, options);
+    //var chart = new google.visualization.PieChart(document.getElementById('results'));
+    //chart.draw(data, options);
     return true;
 }
 
