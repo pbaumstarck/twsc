@@ -178,7 +178,7 @@ function checkMstConsole(value) {
                 return;
             }
             console.log(q);
-            str += '<div id="' + randID + '"></div>';
+            str += '<div id="' + randID + '">Fetching YouTube links ...</div>';
             // Excise the name for the search
             var request = gapi.client.youtube.search.list({
                 q: q,
