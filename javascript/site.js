@@ -49,6 +49,12 @@ var actuate = (function() {
 // Gets a module that just echoes the return
 function getDefaultModules() {
     return [{
+        name: "HelpMenu",
+        precedence: 0,
+        kernel: function(value) {
+            return value.match(/^\s*help\s*$/i) ? helpContents : null;
+        }
+    },{
         name: "Default",
         precedence: 0,
         kernel: function(value) {
@@ -58,8 +64,12 @@ function getDefaultModules() {
     }];
 }
 
+// Holds the starting contents of the page, which is the help menu
+var helpContents;
+
 // Our entry point function
 $(document).ready(function() {
+    helpContents = $("#results").html();
     // A continuation for when the a key goes up
     function keyupCont() {
         // Collapse the old results and fill the new

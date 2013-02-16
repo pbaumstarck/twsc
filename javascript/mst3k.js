@@ -18,7 +18,10 @@ var epMap = (function() {
         if (!(season in ret)) {
             ret[season] = [];
         }
-        ret[season].push(number + " - " + title);
+        ret[season].push({
+            number: number,
+            title: title
+        });
     })
     return ret;
 })();
@@ -58,6 +61,7 @@ function splitSeasonArg(arg) {
     } else {
         // Take each character
         elems = [];
+        arg = arg.replace(/10/, "A");
         for (var j = 0; j < arg.length; ++j) {
             elems.push(arg.charAt(j));
         }
@@ -94,13 +98,24 @@ function deassertSeasons(seasons, arg) {
 }
 
 // Get the episode list for the boolean-valued map of seasons
-function getEpList(seasons) {
+// 
+// parameters:
+//   asObjects: Whether to return objects instead of strings (default: false)
+function getEpList(seasons, asObjects) {
+    if (asObjects == null) {
+        asObjects = false;
+    }
     var ret = [];
     $$.each(seasons, function(season, value) {
         if (value === true) {
             ret = ret.concat(epMap[season]);
         }
     });
+    if (!asObjects) {
+        ret = $$.replace(ret, function(item) {
+            return item.number + " - " + item.title;
+        });
+    }
     return ret;
 }
 
@@ -112,7 +127,8 @@ function checkMstConsole(value) {
     var args = value.split(/\s+/),
         seasons = getSeasons(),
         mode = "random",
-        lookups = [];
+        lookups = [],
+        searchTerm;
     for (var i = 1; i < args.length; ++i) {
         var arg = args[i];
         if (arg.indexOf("-s=") === 0) {
@@ -127,6 +143,9 @@ function checkMstConsole(value) {
             // They want to look up specific episodes
             mode = "lookup";
             lookups = lookups.concat(arg.split(/,/));
+        } else if (arg.indexOf("-f=") === 0) {
+            mode = "find";
+            searchTerm = arg.substr(3);
         }
     }
 
@@ -137,11 +156,78 @@ function checkMstConsole(value) {
         return "Your random MST3K episode (from season" + (_keys(seasons).length > 1 ? "s" : "")
             + " " + _englishJoin(_keys(seasons)) + ") is:<br/>\n"
             + list[ix];
+    } else if (mode == "find") {
+        // Display episodes that match 'searchTerm'
+        var list = $$.where(getEpList(seasons), function(item) {
+            return item.match(new RegExp(searchTerm, "i")) != null;
+        });
+        return "Your search over '" + searchTerm + "' yielded:<br/>\n"
+            + list.join("<br/>\n");
     } else if (mode == "lookup") {
         var str = "";
         $$.each(lookups, function(ep) {
             ep = decodeEpNumber(ep);
-            str += (str.length > 0 ? "<br />\n" : "") + epMap[ep.season][ep.number - 1];
+            var ep = epMap[ep.season][ep.number - 1],
+                randID = "search" + ("" + Math.random()).substr(2),
+                q = "mst3k " + ep.title.match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
+                    //+ "s" + ep.season + "e" + (ep.number < 10 ? "0" : "") + ep.number
+                    //+ " " + name.match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
+            str += (str.length > 0 ? "<br />\n" : "") + ep.number + " - " + ep.title;
+            
+            if (node) {
+                return;
+            }
+            console.log(q);
+            str += '<div id="' + randID + '"></div>';
+            // Excise the name for the search
+            var request = gapi.client.youtube.search.list({
+                q: q,
+                part: 'snippet',
+                maxResults: 50,
+                order: 'relevance',
+                type: 'video'
+                //videoDuration: 'long'
+            });
+            request.execute(function(response) {
+                // Score each thing by looking up its info
+                var vids = [],
+                    // The number of in-flight requests,
+                    nWaiting = 0,
+                    // A continuation for when we're done with everything
+                    cont = function() {
+                    // Filter out any that are too short, and keep only the top 5
+                    vids = $$.where(vids, function(vid) {
+                        return vid.data.data.duration >= 3600;
+                    }).slice(0, 5);
+                    var str = "";
+                    $$.each(vids, function(vid) {
+                        str += (str.length > 0 ? "<br />\n" : "")
+                            + '<a href="https://www.youtube.com/watch?v=' + vid.item.id.videoId
+                            + '" title="' + vid.item.snippet.title + '">'
+                            + '<img src="' + vid.item.snippet.thumbnails["default"].url + '">'
+                            + '</img> ' + vid.item.snippet.title + '</a> ('
+                            + Math.round(vid.data.data.duration / 60) + 'm)';
+                    });
+                    $('#' + randID).html(str);
+                };
+                $$.each(response.items, function(item, ix) {
+                    if (!item.id.videoId) {
+                        return;
+                    }
+                    ++nWaiting;
+                    $.getJSON('http://gdata.youtube.com/feeds/api/videos/'
+                        + item.id.videoId + '?v=2&alt=jsonc', function(data) {
+                        vids.push({
+                            item: item,
+                            data: data
+                        })
+                        if (--nWaiting == 0) {
+                            // Everyone is back, so run the continuation
+                            cont();
+                        }
+                    });
+                });
+            });
         });
         return "The MST3K episode" + (lookups.length > 1 ? "s" : "") + " you requested "
             + (lookups.length > 1 ? "are" : "is") + ":<br />\n" + str;
