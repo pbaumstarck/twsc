@@ -23,8 +23,22 @@ class MainPage(webapp2.RequestHandler):
                     <script type="text/javascript">
                         google.load('visualization', '1.0', {'packages':['corechart']});
                     </script>
+                    <style type="text/css">
+                    .yt-video-link {
+                        float: left;
+                        width: 160px;
+                        max-width: 160px;
+                        text-align: left;
+                        vertical-align: top;
+                    }
+                    </style>
                 </head>
                 <body>
+                    <!-- <div id="login-container" class="pre-auth">This application requires access to your YouTube account.
+                        Please <a href="#" id="login-link">authorize</a> to continue.
+                    </div>
+                    <div id="youtube-results">
+                    </div> -->
                     <font size="-1" face="Verdana">
                     <center>
                         <img id="image" src="/imgs/twsc.png" width="400" title="This thing is called the Twin-Screw Universal Controller and it's used to control *everything*! / Well, gee, *everything*'s a lot of stuff, Joel ... / Yeah, I'll say it is!"></img><br />
@@ -32,8 +46,8 @@ class MainPage(webapp2.RequestHandler):
                         "Well, gee, *everything*'s a lot of stuff, Joel ..."<br />
                         "Yeah, I'll say it is!"<br /> -->
                 	    <input id="twsc" type="textbox" style="width: 400px;" placeholder="Type something"></input>
-                	    <br /> 
-                	    <br /> 
+                	    <br />
+                	    <br />
                     </center>
                         <div id="results" style="margin-left: auto; margin-right: auto;">
                             <table width="600" border="0" align="center">

@@ -11,7 +11,7 @@ var epList = ["K00- THE GREEN SLIME (pilot, never shown)","K01- INVADERS FROM TH
 var epMap = (function() {
     var ret = {};
     $$.each(epList, function(ep) {
-        var match = ep.match(/^(([K\d]\d*)\d{2})\-\s*(.*)$/i),
+        var match = ep.match(/^(([K\d]\d?)\d{2})\-\s*(.*)$/i),
             season = match[2],
             number = match[1],
             title = match[3];
@@ -28,10 +28,10 @@ var epMap = (function() {
 
 // Decode an episode reference from a number, returning a tuple of 'season' and 'number'
 function decodeEpNumber(str) {
-    var match = str.match(/^([k\d]\d?)(\d{2})$/i);
+    var match = str.match(/^(k|\d{1,2})(\d{2})$/i);
     return {
         season: match[1],
-        number: parseInt(match[2].replace(/^0+/g, ""))
+        number: parseInt(match[2].replace(/^0+(?=\d)/g, ""))
     };
 }
 
@@ -98,7 +98,7 @@ function deassertSeasons(seasons, arg) {
 }
 
 // Get the episode list for the boolean-valued map of seasons
-// 
+//
 // parameters:
 //   asObjects: Whether to return objects instead of strings (default: false)
 function getEpList(seasons, asObjects) {
@@ -119,6 +119,215 @@ function getEpList(seasons, asObjects) {
     return ret;
 }
 
+// Returns the number of episodes in the season
+function nEpsInSeason(season) {
+    return epMap[season].length;
+}
+
+// class: Season
+// Stored as an integer or string and to be initialized from strings.
+function Season(val, eps) {
+    var _this = this,
+        _value = null,
+        _episodes = [];
+
+    function _ctor() {
+        if (val.match(/^\d+$/)) {
+            _value = parseInt(val);
+        } else {
+            _value = ("" + val).toUpperCase();
+        }
+        _episodes = $$.select(eps, function(ep) {
+            // 'ep' has the full number, so split out the episode number
+            var obj = decodeEpNumber(ep.number);
+            return new Episode(_this, obj.number);
+        });
+        // console.log("Season: " + _value);
+        // $$.each(_episodes, function(ep, ix) {
+        //     console.log(ix + ": " + ep.toString());
+        // });
+    }
+
+    // Accessor to the episodes list
+    _this.episodes = function() { return _episodes; }
+    // The number of episodes that is in this season
+    _this.nEps = function() { return _episodes.length; }
+
+    // Get the next season after this one
+    _this.nextSeason = function() {
+        if (_value == "K") {
+            return Season.get("1");
+        } else if (_value == 10) {
+            return null;
+        } else {
+            return Season.get(_value + 1);
+        }
+    }
+    // Get the season before this one
+    _this.prevSeason = function() {
+        if (_value == "K") {
+            return null;
+        } else if (_value == 1) {
+            return Season.get("K");
+        } else {
+            return Season.get(_value - 1);
+        }
+    }
+    // Get the next episode after this one
+    _this.nextEpisode = function(ep) {
+        var ix = _episodes.indexOf(ep);
+        if (ix == -1) {
+            console.log("missing");
+            return null;
+        }
+        if (ix < _episodes.length - 1) {
+            return _episodes[ix + 1];
+        }
+        var nextSeason = _this.nextSeason();
+        return nextSeason == null ? null : nextSeason.episodes()[0];
+    }
+    // Get the episode before this one
+    _this.prevEpisode = function(ep) {
+        var ix = _episodes.indexOf(ep);
+        if (ix == -1) {
+            console.log("missing");
+            return null;
+        }
+        if (ix > 0) {
+            return _episodes[ix - 1];
+        }
+        var prevSeason = _this.prevSeason();
+        if (prevSeason== null) {
+            return null;
+        }
+        var eps = prevSeason.episodes();
+        return eps[eps.length - 1];
+    }
+
+    _this.toString = function() { return "" + _value; }
+
+
+    _ctor();
+}
+// Get a canonicalized 'Season' object for the given argument
+Season.get = (function() {
+    var _map;
+    return function(val) {
+        if (_map === undefined) {
+            _map = {};
+            // Create the seasons from the episode map
+            $$.each(epMap, function(season, eps) {
+                _map[season] = new Season(season, eps);
+            });
+        }
+        return _map[val];
+    };
+})();
+
+// class: Episode
+// An episode, which can be initialized from a string representation.
+function Episode(arg1, arg2) {
+    var _this = this,
+        // The 'Season' we are in
+        _season = null,
+        _number = -1;
+
+    function _ctor() {
+        if (arg1 != null && arg2 == null) {
+            // They sent us a string to parse
+            var match = arg1.match(/((k|\d{1,2}))(\d{2})/i);
+            _season = Season.get(match[1]);
+            _number = parseInt(match[3]);
+        } else if (arg1 != null && arg2 != null) {
+            // They sent us a season and episode independently
+            _season = arg1;
+            _number = parseInt(arg2);
+        } else {
+            throw new Error("Invalid 'Episode' construction");
+        }
+    }
+
+    _this.season = function() { return _season; }
+    _this.number = function() { return _number; }
+
+    // Return the next episode
+    _this.next = function() {
+        return _season.nextEpisode(_this);
+    }
+
+    // Return the previous episode
+    _this.prev = function() {
+        return _season.prevEpisode(_this);
+    }
+
+    _this.toString = function() {
+        return _season.toString() + (_number < 10 ? "0" : "") + _number;
+    }
+
+    _ctor();
+}
+// Return a list of episodes from the given string
+Episode.get = function(str) {
+    str = str.toUpperCase();
+    var obj = decodeEpNumber(str);
+    if (obj == null) {
+        return null;
+    }
+    var season = Season.get(obj.season);
+    if (season == null || obj.number < 0 || obj.number > season.nEps()) {
+        return null;
+    }
+    var ret = null;
+    $$.each(season.episodes(), function(ep) {
+        if (ep.toString() == str) {
+            ret = ep;
+            return true;
+        }
+    });
+    return ret;
+}
+
+// Get the range of episodes expressed in a '314-22'-style string.
+//
+// parameters:
+//   str: The String to parse
+//
+// returns:
+//   A list of 'Episode' objects
+function getEpRange(str) {
+    var match = str.match(/([k\d]\d{2,3})\-(k?\d+)/i),
+        first = match[1],
+        last = match[2];
+    // If the 'last' match is too short, transplant from the 'first'
+    if (last.length <= 2) {
+        // Must transplant
+        last = first.substr(0, first.length - last.length) + last;
+    }
+    var firstEp = Episode.get(first),
+        lastEp = Episode.get(last);
+    if (firstEp == null) {
+        if (lastEp == null) {
+            return [];
+        } else {
+            return [lastEp];
+        }
+    } else {
+        if (lastEp == null) {
+            return [firstEp];
+        } else {
+            var ret = [firstEp],
+                next = firstEp;
+            while ((next = next.next()) != null) {
+                ret.push(next);
+                if (next == lastEp) {
+                    break;
+                }
+            }
+            return ret;
+        }
+    }
+}
+
 // Check for a request for a random MST3K episode
 function checkMstConsole(value) {
     if (!value.match(/^mst(\s|$)/)) {
@@ -128,7 +337,8 @@ function checkMstConsole(value) {
         seasons = getSeasons(),
         mode = "random",
         lookups = [],
-        searchTerm;
+        searchTerm,
+        match;
     for (var i = 1; i < args.length; ++i) {
         var arg = args[i];
         if (arg.indexOf("-s=") === 0) {
@@ -139,13 +349,20 @@ function checkMstConsole(value) {
             // They want to disallow these seasons
             deassertSeasons(seasons, arg.substr(4));
             mode = "random";
-        } else if (arg.match(/[k\d]\d{2,3}(,[k\d]\d{2,3})*/)) {
+        } else if (arg.match(/^[k\d]\d{2,3}(,[k\d]\d{2,3})*$/)) {
             // They want to look up specific episodes
             mode = "lookup";
             lookups = lookups.concat(arg.split(/,/));
         } else if (arg.indexOf("-f=") === 0) {
             mode = "find";
             searchTerm = arg.substr(3);
+        } else if (arg.match(/^((k|\d{1,2})\d{2})\-(k?\d+)$/i)) {
+            // They're interested in a range of episodes
+            mode = "lookup";
+            $$.each(getEpRange(arg), function(ep) {
+                console.log(ep.toString());
+                lookups.push(ep.toString());
+            });
         }
     }
 
@@ -173,7 +390,7 @@ function checkMstConsole(value) {
                     //+ "s" + ep.season + "e" + (ep.number < 10 ? "0" : "") + ep.number
                     //+ " " + name.match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
             str += (str.length > 0 ? "<br />\n" : "") + ep.number + " - " + ep.title;
-            
+
             if (node) {
                 return;
             }
@@ -199,16 +416,19 @@ function checkMstConsole(value) {
                     vids = $$.where(vids, function(vid) {
                         return vid.data.data.duration >= 3600;
                     }).slice(0, 5);
-                    var str = "";
+                    var vidLinks = [];
                     $$.each(vids, function(vid) {
-                        str += (str.length > 0 ? "<br />\n" : "")
-                            + '<a href="https://www.youtube.com/watch?v=' + vid.item.id.videoId
-                            + '" title="' + vid.item.snippet.title + '">'
-                            + '<img src="' + vid.item.snippet.thumbnails["default"].url + '">'
-                            + '</img> ' + vid.item.snippet.title + '</a> ('
-                            + Math.round(vid.data.data.duration / 60) + 'm)';
+                        vidLinks.push('<div class="yt-video-link">'
+                                + '<a href="https://www.youtube.com/watch?v=' + vid.item.id.videoId
+                                + '" title="' + vid.item.snippet.title + '">'
+                                + '<img src="' + vid.item.snippet.thumbnails["default"].url + '"></a>'
+                                + '</img>'
+                                + '<br />' + vid.item.snippet.title + ' ('
+                                + Math.round(vid.data.data.duration / 60) + 'm)'
+                            + '</div>');
                     });
-                    $('#' + randID).html(str);
+                    $('#' + randID).html(vidLinks.join("")
+                        + '<div style="clear: both;"></div>');
                 };
                 $$.each(response.items, function(item, ix) {
                     if (!item.id.videoId) {
@@ -254,7 +474,7 @@ function getMst3kModules() {
         name: "MST3K",
         precedence: 1,
         kernel: checkMstConsole
-    }];    
+    }];
 }
 
 function _keys(obj) {
@@ -280,13 +500,13 @@ function testSeasons(console) {
     console.log(_keys(deassertSeasons(getSeasons(), "1234")));
     console.log(_keys(assertSeasons(getSeasons(), "A")));
     console.log(_keys(deassertSeasons(getSeasons(), "K")));
-    
+
     // Test episode list lengths
     console.log("All: " + getEpList(getSeasons()).length);
     console.log("Sans K: " + getEpList(deassertSeasons(getSeasons(), "K")).length);
     console.log("Just 10: " + getEpList(assertSeasons(getSeasons(), "A")).length);
     console.log("Just 2,8: " + getEpList(assertSeasons(getSeasons(), "2,8")).length);
-    
+
     // Test decoding episode numbers
     console.log(JSON.stringify(decodeEpNumber("k01")));
     console.log(JSON.stringify(decodeEpNumber("k02")));
@@ -296,6 +516,18 @@ function testSeasons(console) {
     console.log(JSON.stringify(decodeEpNumber("1013")));
     console.log(JSON.stringify(decodeEpNumber("717")));
     console.log(JSON.stringify(decodeEpNumber("1009")));
+}
+
+// Test querying for an episode range
+function testEpRange(console) {
+    console.log(getEpRange("314-22"));
+    console.log(getEpRange("301-05"));
+    console.log(getEpRange("301-10"));
+    console.log(getEpRange("309-11"));
+    console.log(getEpRange("K01-19"));
+    console.log(getEpRange("K00-1"));
+    console.log(getEpRange("K21-103"));
+    console.log(getEpRange("620-802"));
 }
 
 // Test full queries
@@ -314,14 +546,40 @@ function testEpMap(console) {
     });
 }
 
+// Test building 'Episode' objects
+function testEpisodes(console) {
+    function print(ep) {
+        var ep1 = Episode.get(ep);
+        if (ep1 == null) {
+            console.log("'" + ep + "' not found.");
+        } else {
+            ep = ep1;
+            function kernel(ep) {
+                return ep == null ? "*" :
+                    ep.toString() + ' - ' + ep.season() + '|' + ep.number();
+            }
+            console.log(kernel(ep.prev()) + " ===> " + kernel(ep) + " ===> " + kernel(ep.next()));
+        }
+    }
+    print("K01");
+    print("K22");
+    print("101");
+    print("113");
+    print("114");
+    print("1001");
+    print("1013");
+}
+
 if (node) {
     module.exports = {
         test: function(console) {
             testEpMap(console);
             testSeasons(console);
             testQueries(console);
+            testEpRange(console);
+            testEpisodes(console);
         }
-    };    
+    };
 }
 
 
