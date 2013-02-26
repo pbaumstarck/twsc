@@ -349,18 +349,17 @@ function checkMstConsole(value) {
             // They want to disallow these seasons
             deassertSeasons(seasons, arg.substr(4));
             mode = "random";
-        } else if (arg.match(/^[k\d]\d{2,3}(,[k\d]\d{2,3})*$/)) {
-            // They want to look up specific episodes
-            mode = "lookup";
-            lookups = lookups.concat(arg.split(/,/));
         } else if (arg.indexOf("-f=") === 0) {
             mode = "find";
             searchTerm = arg.substr(3);
+        } else if (arg.match(/^[k\d]\d{2,3}(,[k\d]\d{2,3})*$/i)) {
+            // They want to look up specific episodes
+            mode = "lookup";
+            lookups = lookups.concat(arg.split(/,/));
         } else if (arg.match(/^((k|\d{1,2})\d{2})\-(k?\d+)$/i)) {
             // They're interested in a range of episodes
             mode = "lookup";
             $$.each(getEpRange(arg), function(ep) {
-                console.log(ep.toString());
                 lookups.push(ep.toString());
             });
         }
@@ -381,7 +380,8 @@ function checkMstConsole(value) {
         return "Your search over '" + searchTerm + "' yielded:<br/>\n"
             + list.join("<br/>\n");
     } else if (mode == "lookup") {
-        var str = "";
+        var str = "",
+            jobQueue = [];
         $$.each(lookups, function(ep) {
             ep = decodeEpNumber(ep);
             var ep = epMap[ep.season][ep.number - 1],
@@ -396,59 +396,67 @@ function checkMstConsole(value) {
             }
             console.log(q);
             str += '<div id="' + randID + '">Fetching YouTube links ...</div>';
-            // Excise the name for the search
-            var request = gapi.client.youtube.search.list({
-                q: q,
-                part: 'snippet',
-                maxResults: 50,
-                order: 'relevance',
-                type: 'video'
-                //videoDuration: 'long'
-            });
-            request.execute(function(response) {
-                // Score each thing by looking up its info
-                var vids = [],
-                    // The number of in-flight requests,
-                    nWaiting = 0,
-                    // A continuation for when we're done with everything
-                    cont = function() {
-                    // Filter out any that are too short, and keep only the top 5
-                    vids = $$.where(vids, function(vid) {
-                        return vid.data.data.duration >= 3600;
-                    }).slice(0, 5);
-                    var vidLinks = [];
-                    $$.each(vids, function(vid) {
-                        vidLinks.push('<div class="yt-video-link">'
-                                + '<a href="https://www.youtube.com/watch?v=' + vid.item.id.videoId
-                                + '" title="' + vid.item.snippet.title + '">'
-                                + '<img src="' + vid.item.snippet.thumbnails["default"].url + '"></a>'
-                                + '</img>'
-                                + '<br />' + vid.item.snippet.title + ' ('
-                                + Math.round(vid.data.data.duration / 60) + 'm)'
-                            + '</div>');
-                    });
-                    $('#' + randID).html(vidLinks.join("")
-                        + '<div style="clear: both;"></div>');
-                };
-                $$.each(response.items, function(item, ix) {
-                    if (!item.id.videoId) {
-                        return;
-                    }
-                    ++nWaiting;
-                    $.getJSON('http://gdata.youtube.com/feeds/api/videos/'
-                        + item.id.videoId + '?v=2&alt=jsonc', function(data) {
-                        vids.push({
-                            item: item,
-                            data: data
-                        })
-                        if (--nWaiting == 0) {
-                            // Everyone is back, so run the continuation
-                            cont();
+            jobQueue.push(function() {
+                // Excise the name for the search
+                var request = gapi.client.youtube.search.list({
+                    q: q,
+                    part: 'snippet',
+                    maxResults: 5,
+                    order: 'relevance',
+                    type: 'video'
+                    //videoDuration: 'long'
+                });
+                request.execute(function(response) {
+                    // Score each thing by looking up its info
+                    var vids = [],
+                        // The number of in-flight requests,
+                        nWaiting = 0,
+                        // A continuation for when we're done with everything
+                        cont = function() {
+                        // Filter out any that are too short, and keep only the top 5
+                        vids = $$.where(vids, function(vid) {
+                            return vid.data.data.duration >= 3600;
+                        }).slice(0, 5);
+                        var vidLinks = [];
+                        $$.each(vids, function(vid) {
+                            vidLinks.push('<div class="yt-video-link">'
+                                    + '<a href="https://www.youtube.com/watch?v=' + vid.item.id.videoId
+                                    + '" title="' + vid.item.snippet.title + '">'
+                                    + '<img src="' + vid.item.snippet.thumbnails["default"].url + '"></a>'
+                                    + '</img>'
+                                    + '<br />' + vid.item.snippet.title + ' ('
+                                    + Math.round(vid.data.data.duration / 60) + 'm)'
+                                + '</div>');
+                        });
+                        $('#' + randID).html(vidLinks.join("")
+                            + '<div style="clear: both;"></div>');
+                    };
+                    $$.each(response.items, function(item, ix) {
+                        if (item.id.videoId) {
+                            ++nWaiting;
+                            $.getJSON('http://gdata.youtube.com/feeds/api/videos/'
+                                + item.id.videoId + '?v=2&alt=jsonc', function(data) {
+                                vids.push({
+                                    item: item,
+                                    data: data
+                                })
+                                if (--nWaiting == 0) {
+                                    // Everyone is back, so run the continuation
+                                    cont();
+                                }
+                            });
                         }
                     });
                 });
             });
         });
+        var evalQueue = function() {
+            if (jobQueue.length) {
+                jobQueue.shift()();
+                setTimeout(function() { evalQueue() }, 500);
+            }
+        };
+        evalQueue();
         return "The MST3K episode" + (lookups.length > 1 ? "s" : "") + " you requested "
             + (lookups.length > 1 ? "are" : "is") + ":<br />\n" + str;
     }
@@ -528,6 +536,7 @@ function testEpRange(console) {
     console.log(getEpRange("K00-1"));
     console.log(getEpRange("K21-103"));
     console.log(getEpRange("620-802"));
+    //console.log(getEpRange("301-308"));
 }
 
 // Test full queries
@@ -536,6 +545,7 @@ function testQueries(console) {
     console.log(checkMstConsole("mst 1009"));
     console.log(checkMstConsole("mst 107 1009"));
     console.log(checkMstConsole("mst 1008,1009,313 314,315"));
+    console.log(checkMstConsole("mst 301-8"));
 }
 
 // Verify the contents of the episode map
