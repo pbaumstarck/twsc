@@ -14,6 +14,7 @@ class MainPage(webapp2.RequestHandler):
                     <script type="text/javascript" src="/javascript/auth.js"></script>
                     <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
                     <script type="text/javascript" src="/javascript/jstz.min.js"></script>
+                    <script type="text/javascript" src="/javascript/Limiter.js"></script>
                     <script type="text/javascript" src="/javascript/mst.js"></script>
                     <script type="text/javascript" src="/javascript/colors.js"></script>
                     <script type="text/javascript" src="/javascript/numbers.js"></script>

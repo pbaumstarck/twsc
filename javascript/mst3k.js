@@ -380,8 +380,7 @@ function checkMstConsole(value) {
         return "Your search over '" + searchTerm + "' yielded:<br/>\n"
             + list.join("<br/>\n");
     } else if (mode == "lookup") {
-        var str = "",
-            jobQueue = [];
+        var str = "";
         $$.each(lookups, function(ep) {
             ep = decodeEpNumber(ep);
             var ep = epMap[ep.season][ep.number - 1],
@@ -396,7 +395,7 @@ function checkMstConsole(value) {
             }
             console.log(q);
             str += '<div id="' + randID + '">Fetching YouTube links ...</div>';
-            jobQueue.push(function() {
+            youtubeQueue.attach(function(signal) {
                 // Excise the name for the search
                 var request = gapi.client.youtube.search.list({
                     q: q,
@@ -407,6 +406,7 @@ function checkMstConsole(value) {
                     //videoDuration: 'long'
                 });
                 request.execute(function(response) {
+                    signal();
                     // Score each thing by looking up its info
                     var vids = [],
                         // The number of in-flight requests,
@@ -434,29 +434,25 @@ function checkMstConsole(value) {
                     $$.each(response.items, function(item, ix) {
                         if (item.id.videoId) {
                             ++nWaiting;
-                            $.getJSON('http://gdata.youtube.com/feeds/api/videos/'
-                                + item.id.videoId + '?v=2&alt=jsonc', function(data) {
-                                vids.push({
-                                    item: item,
-                                    data: data
-                                })
-                                if (--nWaiting == 0) {
-                                    // Everyone is back, so run the continuation
-                                    cont();
-                                }
+                            youtubeQueue.attach(function(signal) {
+                                $.getJSON('http://gdata.youtube.com/feeds/api/videos/'
+                                    + item.id.videoId + '?v=2&alt=jsonc', function(data) {
+                                    signal();
+                                    vids.push({
+                                        item: item,
+                                        data: data
+                                    })
+                                    if (--nWaiting == 0) {
+                                        // Everyone is back, so run the continuation
+                                        cont();
+                                    }
+                                });
                             });
                         }
                     });
                 });
             });
         });
-        var evalQueue = function() {
-            if (jobQueue.length) {
-                jobQueue.shift()();
-                setTimeout(function() { evalQueue() }, 500);
-            }
-        };
-        evalQueue();
         return "The MST3K episode" + (lookups.length > 1 ? "s" : "") + " you requested "
             + (lookups.length > 1 ? "are" : "is") + ":<br />\n" + str;
     }
