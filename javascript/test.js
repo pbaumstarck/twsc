@@ -32,7 +32,7 @@ $$.each(tests, function(test) {
 });
 
 if (mode == "test") {
-	fs.writeFileSync("comparison.json", JSON.stringify(log, null, '\t'));
+	//fs.writeFileSync("comparison.json", JSON.stringify(log, null, '\t'));
 	var reference = fs.readFileSync("reference.json", "utf-8").replace(/\r/g, ""),
 		actual = JSON.stringify(log, null, '\t').replace(/\r/g, ""),
 		success = actual == reference;
