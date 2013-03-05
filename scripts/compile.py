@@ -9,14 +9,14 @@ scripts = []
 seen_else = False
 for line in lines:
   if seen_else:
-    src_match = re.match(r'.*type\s*=\s*"text/javascript".*?\ssrc\s*=\s*"([^"]+)".*', line)
+    src_match = re.search(r'type\s*=\s*"text/javascript".*?\ssrc\s*=\s*"([^"]+)"', line)
     if src_match:
      scripts.append(src_match.group(1))
-  elif re.match(r'.*{% else %}.*', line):
+  elif re.search(r'{% else %}', line):
     seen_else = True
 
 source = '\n'.join([open('..' + script, 'r').read() for script in scripts
-    if re.match(r'^/javascript/.*', script)])
+    if re.match(r'/javascript/', script)])
 
 # Define the parameters for the POST request and encode them in a URL-safe
 # format.

@@ -17,12 +17,13 @@ function getRand(n) {
 // function: actuate
 // Actuates the Twin-Screw Universal Controller
 var actuate = (function() {
-    var modules = 
+    var modules =
         getColorsModules()
         .concat(getNumbersModules())
         .concat(getDefaultModules())
         .concat(getPlottingModules())
-        .concat(getMst3kModules());
+        .concat(getMst3kModules())
+        .concat(getMst3kVizModules());
     // Sort them
     modules.sort(function(a, b) {
         return -(a.precedence - b.precedence);
@@ -78,10 +79,10 @@ $(document).ready(function() {
             $("#results").show("fast");
         });
     }
-    
+
     var tz = jstz.determine(); // Determines the time zone of the browser client
     tz.name(); // Returns the name of the time zone eg "Europe/Berlin"
-    
+
     var visible = true;
     $("#twsc").keyup(function(event) {
         // Only respond to the 'Enter' key
@@ -100,4 +101,3 @@ $(document).ready(function() {
 });
 
 
-    

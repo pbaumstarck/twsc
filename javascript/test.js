@@ -25,7 +25,8 @@ var tests = [
     require('./colors.js').test,
     require('./numbers.js').test,
     require('./plots.js').test,
-    require('./mst3k.js').test
+    require('./mst3k.js').test,
+    require('./mstviz.js').test
 ];
 $$.each(tests, function(test) {
     test(console);

@@ -43,21 +43,33 @@ function handleAuthResult(authResult) {
     //loadAPIClientInterfaces();
     gapi.client.load('youtube', 'v3', function() {
       //handleAPILoaded();
-      // Query for history
-      $.getJSON('https://gdata.youtube.com/feeds/api/users/default/watch_history' +
-          '?v=2' +
-          '&alt=json' +
-          // '&start-index=4' +
-          '&max-results=40' +
-          '&access_token=' + authResult.access_token,
-          function(data) {
-            console.log(data);
-            var entries = [];
-            $.each(data.feed.entry, function(ix, entry) {
-              entries.push(entry.title.$t + ' --- ' + entry.updated.$t);
+      function getHistory() {
+        // Query for history
+        $.getJSON('https://gdata.youtube.com/feeds/api/users/default/watch_history' +
+            '?v=2' +
+            '&alt=json' +
+            '&start-index=' + (entries.length + 1) +
+            '&max-results=50' +
+            '&access_token=' + authResult.access_token,
+            function(data) {
+              console.log(entries);
+              $('#youtube-results').html(entries.join(",,,"));
+              if (data.feed.entry.length == 0) {
+                return;
+              }
+              console.log(data);
+              $.each(data.feed.entry, function(ix, entry) {
+                entries.push(entry.title.$t + "::::" + entry.updated.$t);
+                // entries.push({
+                  // title: entry.title.$t,
+                  // date: entry.updated.$t
+                // });
+              });
+              getHistory();
             });
-            $('#youtube-results').html(entries.join(",,,"));
-          });
+      }
+      var entries = [];
+      getHistory();
       console.log("Issued query ...");
       // var request = gapi.client.youtube.search.list({
       //   q: q,

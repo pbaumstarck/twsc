@@ -140,7 +140,7 @@ function Season(val, eps) {
         _episodes = $$.select(eps, function(ep) {
             // 'ep' has the full number, so split out the episode number
             var obj = decodeEpNumber(ep.number);
-            return new Episode(_this, obj.number);
+            return new Episode(_this, obj.number, ep.title);
         });
         // console.log("Season: " + _value);
         // $$.each(_episodes, function(ep, ix) {
@@ -226,11 +226,12 @@ Season.get = (function() {
 
 // class: Episode
 // An episode, which can be initialized from a string representation.
-function Episode(arg1, arg2) {
+function Episode(arg1, arg2, arg3) {
     var _this = this,
         // The 'Season' we are in
         _season = null,
-        _number = -1;
+        _number = -1,
+        _title = "";
 
     function _ctor() {
         if (arg1 != null && arg2 == null) {
@@ -242,6 +243,7 @@ function Episode(arg1, arg2) {
             // They sent us a season and episode independently
             _season = arg1;
             _number = parseInt(arg2);
+            _title = arg3;
         } else {
             throw new Error("Invalid 'Episode' construction");
         }
@@ -249,6 +251,7 @@ function Episode(arg1, arg2) {
 
     _this.season = function() { return _season; }
     _this.number = function() { return _number; }
+    _this.title = function() { return _title; }
 
     // Return the next episode
     _this.next = function() {
@@ -284,6 +287,16 @@ Episode.get = function(str) {
             return true;
         }
     });
+    return ret;
+}
+// Gets all episodes in an array
+Episode.getAll = function(withKtma) {
+    var ret = [],
+        season = withKtma === true ? Season.get("K") : Season.get("1");
+    while (season != null) {
+        ret = ret.concat(season.episodes());
+        season = season.nextSeason();
+    }
     return ret;
 }
 
@@ -584,7 +597,9 @@ if (node) {
             testQueries(console);
             testEpRange(console);
             testEpisodes(console);
-        }
+        },
+        Episode: Episode,
+        Season: Season
     };
 }
 
