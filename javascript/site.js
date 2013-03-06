@@ -95,6 +95,8 @@ $(document).ready(function() {
                     image.slideUp("fast", function() {
                         keyupCont();
                     });
+                } else {
+                    keyupCont();
                 }
             } else {
                 keyupCont();
