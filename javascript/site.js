@@ -90,9 +90,12 @@ $(document).ready(function() {
             if (visible) {
                 visible = false;
                 // Collapse the image div
-                $("#image").slideUp("fast", function() {
-                    keyupCont();
-                });
+                var image = $("#image");
+                if (image.length) {
+                    image.slideUp("fast", function() {
+                        keyupCont();
+                    });
+                }
             } else {
                 keyupCont();
             }

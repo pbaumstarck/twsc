@@ -74,10 +74,12 @@
         <div id="youtube-results"></div>-->
         <font size="-1" face="Verdana">
         <center>
-            <img id="image" src="/imgs/twsc.png" width="400" title="This thing is called the Twin-Screw Universal Controller and it's used to control *everything*! / Well, gee, *everything*'s a lot of stuff, Joel ... / Yeah, I'll say it is!"></img><br />
+            {% if not safe_for_work %}
+                <img id="image" src="/imgs/twsc.png" width="400" title="This thing is called the Twin-Screw Universal Controller and it's used to control *everything*! / Well, gee, *everything*'s a lot of stuff, Joel ... / Yeah, I'll say it is!"></img><br />
             <!-- "This thing is called the Twin-Screw Universal Controller and it's used to control *everything*!"<br />
             "Well, gee, *everything*'s a lot of stuff, Joel ..."<br />
             "Yeah, I'll say it is!"<br /> -->
+            {% endif %}
           <input id="twsc" type="textbox" style="width: 400px;" autocapitalize="off" placeholder="Type something"></input>
           <br />
           <br />

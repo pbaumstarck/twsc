@@ -22,7 +22,7 @@ source = '\n'.join([open('..' + script, 'r').read() for script in scripts
 # format.
 params = urllib.urlencode([
     ('js_code', source),#sys.argv[1]),
-    ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
+    ('compilation_level', 'WHITESPACE_ONLY'),#'SIMPLE_OPTIMIZATIONS'),
     ('output_format', 'text'),
     ('output_info', 'compiled_code'),
   ])
