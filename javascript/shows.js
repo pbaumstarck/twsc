@@ -246,42 +246,16 @@ function Episode(season, number, title) {
     // Return the previous episode
     _this.prev = function() { return season.prevEpisode(_this); }
 
-    _this.toString = function() {
-        return season.toString() + (number < 10 ? "0" : "") + number;
+    _this.toString = function(pretty) {
+        if (pretty === true) {
+            return _this.toString() + (title ? " - " + title : "");
+        } else {
+            return season.toString() + (number < 10 ? "0" : "") + number;
+        }
     }
 
     _ctor();
 }
-// // Return a list of episodes from the given string
-// Episode.get = function(str) {
-//     str = str.toUpperCase();
-//     var obj = decodeEpNumber(str);
-//     if (obj == null) {
-//         return null;
-//     }
-//     var season = Season.get(obj.season);
-//     if (season == null || obj.number < 0 || obj.number > season.nEps()) {
-//         return null;
-//     }
-//     var ret = null;
-//     $$.each(season.episodes(), function(ep) {
-//         if (ep.toString() == str) {
-//             ret = ep;
-//             return true;
-//         }
-//     });
-//     return ret;
-// }
-// // Gets all episodes in an array
-// Episode.getAll = function(withKtma) {
-//     var ret = [],
-//         season = withKtma === true ? Season.get("K") : Season.get("1");
-//     while (season != null) {
-//         ret = ret.concat(season.episodes());
-//         season = season.nextSeason();
-//     }
-//     return ret;
-// }
 
 if (node) {
     module.exports = {

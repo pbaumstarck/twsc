@@ -9,33 +9,6 @@ if (node) {
         Episode = shows.Episode;
 }
 
-// // Get a map of season names from the argument
-// function splitSeasonArg(arg) {
-//     var elems;
-//     if (arg.indexOf(",") != -1) {
-//         // Split along commas
-//         elems = arg.split(/,/);
-//     } else {
-//         // Take each character
-//         elems = [];
-//         arg = arg.replace(/10/, "A");
-//         for (var j = 0; j < arg.length; ++j) {
-//             elems.push(arg.charAt(j));
-//         }
-//     }
-//     // Assert these seasons in 'seasons'
-//     var elemMap = {};
-//     $$.each(elems, function(elem) {
-//         elemMap[elem] = true;
-//     });
-//     if ('A' in elemMap) {
-//         // Convert this to a '10'
-//         elemMap['10'] = elemMap.A;
-//         delete elemMap.A;
-//     }
-//     return elemMap;
-// }
-
 // Keep only the seasons represented in the search string
 function assertSeasons(seasons, searchStr) {
     return $$.where(seasons, function(season) {
@@ -67,18 +40,10 @@ function checkMstConsole(value) {
         if (arg.indexOf("-s=") === 0) {
             // Include only these seasons
             seasons = assertSeasons(seasons, arg.substr(3));
-            // var str = arg.substr(3);
-            // seasons = $$.where(seasons, function(season) {
-            //     return str.indexOf(season.searchName()) != -1;
-            // });
             mode = "random";
         } else if (arg.indexOf("-ns=") === 0) {
             // They want to disallow these seasons
             seasons = deassertSeasons(seasons, arg.substr(4));
-            // var str = arg.substr(4);
-            // seasons = $$.where(seasons, function(season) {
-            //     return str.indexOf(season.searchName()) == -1;
-            // });
             mode = "random";
         } else if (arg.indexOf("-f=") === 0) {
             mode = "find";
@@ -103,28 +68,30 @@ function checkMstConsole(value) {
             ix = Math.floor(list.length * Math.random());
         return "Your random " + show.name() + " episode (from season" + (_keys(seasons).length > 1 ? "s" : "")
             + " " + _englishJoin(_keys(seasons)) + ") is:<br/>\n"
-            + list[ix];
+            + list[ix].toString(true);
     } else if (mode == "find") {
         // Display episodes that match 'searchTerm'
         var regex = new RegExp(searchTerm, "i"),
             list = $$.where(Season.getEpisodes(seasons), function(item) {
-            return item.match(regex) != null;
+            return item.toString(true).match(regex) != null;
         });
-        return "Your search over '" + searchTerm + "' yielded:<br/>\n" + list.join("<br/>\n");
+        return "Your search over '" + searchTerm + "' yielded:<br/>\n"
+            + $$.select(list, function(ep) {
+                var str = ep.toString(true),
+                    match = str.match(regex);
+                return str.substr(0, match.index) + "<b>" + match[0]
+                    + "</b>" + str.substr(match.index + match[0].length);
+            }).join("<br/>\n");
     } else if (mode == "lookup") {
         var str = "";
         $$.each(lookups, function(ep) {
-            //ep = decodeEpNumber(ep);
-            //var ep = epMap[ep.season][ep.number - 1],
             if (!(ep = show.getEpisode(ep))) {
                 return;
             }
             var randID = "search" + ("" + Math.random()).substr(2),
                 q = show.name().toLowerCase() + " "
                     + ep.title().match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
-                    //+ "s" + ep.season + "e" + (ep.number < 10 ? "0" : "") + ep.number
-                    //+ " " + name.match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
-            str += (str.length > 0 ? "<br />\n" : "") + ep.toString() + " - " + ep.title();
+            str += (str.length > 0 ? "<br />\n" : "") + ep.toString(true);// + " - " + ep.title();
 
             if (node) {
                 // In test mode, don't do anything more.
@@ -244,7 +211,6 @@ function testSeasons(console) {
     // console.log(_keys(splitSeasonArg("123456789A")));
     // console.log(_keys(splitSeasonArg("1,2,3,4,5,6,7,8,9,10")));
     // console.log(_keys(splitSeasonArg("AK")));
-    //console.log("!!!");
     console.log(_keys(assertSeasons(show.seasons(), "1234")));
     console.log(_keys(deassertSeasons(show.seasons(), "1234")));
     console.log(_keys(assertSeasons(show.seasons(), "A")));
