@@ -3,7 +3,8 @@ var node = typeof module != "undefined" && module;
 
 if (node) {
   var $$ = require('mst'),
-    mstlib = require('./mst3k.js');
+    shows = require('./shows.js'),
+    Show = shows.Show;
 }
 
 
@@ -124,13 +125,14 @@ function drawCalendar(div, rows) {
 }
 
 function checkMstViz(value) {
-  var pattern = /(^|\s)((10|[k1-9])\d{2})\s*\-?\s*((\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*))(\s*[\,\;]\s*(\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*)))*)/i;
+  var show = Show.get("MST3K");
+  var pattern = /(^|\s)(([\w\d])\d{2})\s*\-?\s*((\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*))(\s*[\,\;]\s*(\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*)))*)/i;
   var rows = [],
     leDates = {},
     // A map going from 'Episode' strings to convenience objects of '{ ep: {Episode}, views: [{Date}+] }'
     epViews = {};
   // And seed that with all episodes
-  $$.each((node ? mstlib.Episode : Episode).getAll(), function(ep) {
+  $$.each(show.getAllEpisodes(), function(ep) {
     epViews[ep.toString()] = {
       ep: ep,
       views: []
@@ -140,7 +142,7 @@ function checkMstViz(value) {
   while ((match = pattern.exec(value))) {
     var number = match[2],
       dates = match[4],
-      ep = (node ? mstlib.Episode : Episode).get(number);
+      ep = show.getEpisode(number);
     if (ep) {
       // Parse all dates
       var subValue = match[0],
@@ -174,87 +176,89 @@ function checkMstViz(value) {
     });
   });
 
-  setTimeout(function() {
-    drawCalendar('calendar', rows);
+  if (!node) {
+    setTimeout(function() {
+      drawCalendar('calendar', rows);
 
-    // Convert 'epViews' to a list
-    var epList = $$.toArray(epViews),
-      str = [],
-      // Get an episode listing in simple form
-      epKernel = function(epListElem, prefix) {
-        if (prefix === undefined || prefix == "viewCount") {
-          prefix = epListElem.views.length;
-        } else if (prefix == "mostRecent") {
-          var views = epListElem.views;
-          if (views.length) {
-            prefix = views[views.length - 1];
-          } else {
-            prefix = "N/A";
+      // Convert 'epViews' to a list
+      var epList = $$.toArray(epViews),
+        str = [],
+        // Get an episode listing in simple form
+        epKernel = function(epListElem, prefix) {
+          if (prefix === undefined || prefix == "viewCount") {
+            prefix = epListElem.views.length;
+          } else if (prefix == "mostRecent") {
+            var views = epListElem.views;
+            if (views.length) {
+              prefix = views[views.length - 1];
+            } else {
+              prefix = "N/A";
+            }
+          } else if (prefix == "leastRecent") {
+            var views = epListElem.views;
+            if (views.length) {
+              prefix = views[0];
+            } else {
+              prefix = "N/A";
+            }
           }
-        } else if (prefix == "leastRecent") {
-          var views = epListElem.views;
-          if (views.length) {
-            prefix = views[0];
-          } else {
-            prefix = "N/A";
+          if (typeof prefix == "object") {
+            prefix = prefix.getFullYear() + "." + (prefix.getMonth() + 1) + "."
+              + prefix.getDate();
           }
-        }
-        if (typeof prefix == "object") {
-          prefix = prefix.getFullYear() + "." + (prefix.getMonth() + 1) + "."
-            + prefix.getDate();
-        }
-        return '<i>' + prefix + '</i> &ndash; ' + epListElem.ep.toString()
-          + ' ' + epListElem.ep.title();
-      };
+          return '<i>' + prefix + '</i> &ndash; ' + epListElem.ep.toString()
+            + ' ' + epListElem.ep.title();
+        };
 
-    var divWidth = 250;
-    // Fill in the 'stats' thing
-    // - Most watched
-    epList.sort(function(a, b) {
-      return -(a.views.length - b.views.length);
-    });
-    str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Most watched:</b>');
-    var mostWatched = [];
-    for (var i = 0; i < 5 && i < epList.length; ++i) {
-      str.push('<br />' + epKernel(epList[i], "viewCount"));
-    }
-    str.push('</div>');
+      var divWidth = 250;
+      // Fill in the 'stats' thing
+      // - Most watched
+      epList.sort(function(a, b) {
+        return -(a.views.length - b.views.length);
+      });
+      str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Most watched:</b>');
+      var mostWatched = [];
+      for (var i = 0; i < 5 && i < epList.length; ++i) {
+        str.push('<br />' + epKernel(epList[i], "viewCount"));
+      }
+      str.push('</div>');
 
-    // - Least watched
-    str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Least watched:</b>');
-    var mostWatched = [];
-    for (var i = epList.length - 1; i >= epList.length - 5 && i >= 0; --i) {
-      str.push('<br />' + epKernel(epList[i], "viewCount"));
-    }
-    str.push('</div>');
+      // - Least watched
+      str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Least watched:</b>');
+      var mostWatched = [];
+      for (var i = epList.length - 1; i >= epList.length - 5 && i >= 0; --i) {
+        str.push('<br />' + epKernel(epList[i], "viewCount"));
+      }
+      str.push('</div>');
 
-    // - Most recently watched
-    epList.sort(function(a, b) {
-      return -((a.views.length ? a.views[a.views.length - 1] : 0)
-        - (b.views.length ? b.views[b.views.length - 1] : 0));
-    });
-    str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Most recently watched:</b>');
-    var mostWatched = [];
-    for (var i = 0; i < epList.length && i < 5; ++i) {
-      str.push('<br />' + epKernel(epList[i], "mostRecent"));
-    }
-    str.push('</div>');
+      // - Most recently watched
+      epList.sort(function(a, b) {
+        return -((a.views.length ? a.views[a.views.length - 1] : 0)
+          - (b.views.length ? b.views[b.views.length - 1] : 0));
+      });
+      str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Most recently watched:</b>');
+      var mostWatched = [];
+      for (var i = 0; i < epList.length && i < 5; ++i) {
+        str.push('<br />' + epKernel(epList[i], "mostRecent"));
+      }
+      str.push('</div>');
 
-    // - Least recently watched
-    epList.sort(function(a, b) {
-      return (a.views.length ? a.views[0] : 0) - (b.views.length ? b.views[0] : 0);
-    });
-    str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Least recently watched:</b>');
-    var mostWatched = [];
-    for (var i = 0; i < epList.length && i < 5; ++i) {
-      str.push('<br />' + epKernel(epList[i], "leastRecent"));
-    }
-    str.push('</div>');
+      // - Least recently watched
+      epList.sort(function(a, b) {
+        return (a.views.length ? a.views[0] : 0) - (b.views.length ? b.views[0] : 0);
+      });
+      str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Least recently watched:</b>');
+      var mostWatched = [];
+      for (var i = 0; i < epList.length && i < 5; ++i) {
+        str.push('<br />' + epKernel(epList[i], "leastRecent"));
+      }
+      str.push('</div>');
 
 
-    // Fill in the 'div'
-    $('#stats').html(str.join(""));
-  }, 1);
+      // Fill in the 'div'
+      $('#stats').html(str.join(""));
+    }, 1);
+  }
   return '<div id="stats"></div>'
     + '<div id="calendar" style="clear: both;" class="calendar"></div>';
 }

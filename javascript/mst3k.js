@@ -2,343 +2,52 @@
 var node = typeof module != "undefined" && module != null;
 
 if (node) {
-    var $$ = require('mst');
+    var $$ = require('mst'),
+        shows = require('./shows.js'),
+        Show = shows.Show,
+        Season = shows.Season,
+        Episode = shows.Episode;
 }
 
-// The list of all episodes, line by line
-var epList = ["K00- THE GREEN SLIME (pilot, never shown)","K01- INVADERS FROM THE DEEP","K02- REVENGE OF THE MYSTERONS","K03- STAR FORCE: FUGITIVE ALIEN 2","K04- GAMERA VS. BARUGON","K05- GAMERA","K06- GAMERA VS. GAOS","K07- GAMERA VS. ZIGRA","K08- GAMERA VS. GUIRON","K09- PHASE IV","K10- COSMIC PRINCESS","K11- HUMANOID WOMAN","K12- FUGITIVE ALIEN","K13- SST DEATH FLIGHT","K14- MIGHTY JACK","K15- SUPERDOME","K16- CITY ON FIRE","K17- TIME OF THE APES","K18- THE MILLION EYES OF SU-MURU","K19- HANGAR 18","K20- THE LAST CHASE","K21- LEGEND OF THE DINOSAUR","101- THE CRAWLING EYE","102- THE ROBOT VS. THE AZTEC MUMMY with short: COMMANDO CODY AND THE RADAR MEN FROM THE MOON PT 1","103- MAD MONSTER with short: COMMANDO CODY PT 2","104- WOMEN OF THE PREHISTORIC PLANET","105- THE CORPSE VANISHES with short: COMMANDO CODY PT 3","106- THE CRAWLING HAND","107- ROBOT MONSTER with shorts: COMMANDO CODY PTS 4 and 5","108- THE SLIME PEOPLE with short: COMMANDO CODY PT 6","109- PROJECT MOONBASE with shorts: COMMANDO CODY PTS 7 and 8","110- ROBOT HOLOCAUST with short: COMMANDO CODY PT 9 (partial)","111- MOON ZERO TWO","112- UNTAMED YOUTH","113- THE BLACK SCORPION","201- ROCKETSHIP X-M","202- THE SIDEHACKERS","203- JUNGLE GODDESS with short: THE PHANTOM CREEPS PT 1","204- CATALINA CAPER","205- ROCKET ATTACK USA with short: THE PHANTOM CREEPS PT 2","206- THE RING OF TERROR with short: THE PHANTOM CREEPS PT 3","207- WILD REBELS","208- LOST CONTINENT","209- THE HELLCATS","210- KING DINOSAUR with short: X MARKS THE SPOT","211- FIRST SPACESHIP ON VENUS","212- GODZILLA VS. MEGALON","213- GODZILLA VS. THE SEA MONSTER","301- CAVE DWELLERS","302- GAMERA","303- POD PEOPLE","304- GAMERA VS. BARUGON","305- STRANDED IN SPACE","306- TIME OF THE APES","307- DADDY-O with short: ALPHABET ANTICS","308- GAMERA VS. GAOS","309- THE AMAZING COLOSSAL MAN","310- FUGITIVE ALIEN","311- IT CONQUERED THE WORLD with short: SNOW THRILLS","312- GAMERA VS. GUIRON","313- EARTH VS. THE SPIDER with short: USING YOUR VOICE","314- MIGHTY JACK","315- TEENAGE CAVEMAN with shorts: AQUATIC WIZARDS and CATCHING TROUBLE","316- GAMERA VS. ZIGRA","317- VIKING WOMEN VS. THE SEA SERPENT with short: THE HOME ECONOMICS STORY","318- STAR FORCE - FUGITIVE ALIEN II","319- WAR OF THE COLOSSAL BEAST with short: MR. B. NATURAL","320- THE UNEARTHLY with shorts: POSTURE PALS and APPRECIATING OUR PARENTS","321- SANTA CLAUS CONQUERS THE MARTIANS","322- MASTER NINJA I","323- THE CASTLE OF FU-MANCHU","324- MASTER NINJA II","401- SPACE TRAVELERS","402- THE GIANT GILA MONSTER","403- CITY LIMITS","404- TEENAGERS FROM OUTER SPACE","405- BEING FROM ANOTHER PLANET","406- ATTACK OF THE GIANT LEECHES with short: UNDERSEA KINGDOM PT 1","407- THE KILLER SHREWS with short: JUNIOR RODEO DAREDEVILS","408- HERCULES UNCHAINED","409- THE INDESTRUCTIBLE MAN with short: UNDERSEA KINGDOM PT 2","410- HERCULES AGAINST THE MOON MEN","411- THE MAGIC SWORD","412- HERCULES AND THE CAPTIVE WOMEN","413- MANHUNT IN SPACE with short: GENERAL HOSPITAL PT 1","414- TORMENTED","415- THE BEATNIKS with short: GENERAL HOSPITAL PT 2","416- FIRE MAIDENS OF OUTER SPACE","417- CRASH OF THE MOONS with short: GENERAL HOSPITAL PT 3","418- ATTACK OF THE THE EYE CREATURES","419- THE REBEL SET with short: JOHNNY AT THE FAIR","420- THE HUMAN DUPLICATORS","421- MONSTER A-GO-GO with short: CIRCUS ON ICE","422- THE DAY THE EARTH FROZE with short: HERE COMES THE CIRCUS","423- BRIDE OF THE MONSTER with short: HIRED! PT 1","424- \"MANOS\": THE HANDS OF FATE with short: HIRED! PT 2","501- WARRIOR OF THE LOST WORLD","502- HERCULES","503- SWAMP DIAMONDS with short: WHAT TO DO ON A DATE","504- SECRET AGENT SUPER DRAGON","505- MAGIC VOYAGE OF SINBAD","506- EEGAH!","507- I ACCUSE MY PARENTS with short: THE TRUCK FARMER","508- OPERATION DOUBLE 007","509- GIRL IN LOVER'S LANE","510- THE PAINTED HILLS with short: BODY CARE AND GROOMING","511- GUNSLINGER","512- MITCHELL","513- THE BRAIN THAT WOULDN'T DIE","514- TEEN-AGE STRANGLER with short: IS THIS LOVE?","515- WILD, WILD WORLD OF BATWOMAN with short: CHEATING","516- ALIEN FROM L.A.","517- THE BEGINNING OF THE END","518- THE ATOMIC BRAIN with short: WHAT ABOUT JUVENILE DELINQUENCY?","519- OUTLAW (OF GOR)","520- RADAR SECRET SERVICE with short: LAST CLEAR CHANCE","521- SANTA CLAUS","522- TEEN-AGE CRIME WAVE","523- VILLAGE OF THE GIANTS","524- 12 TO THE MOON with short: DESIGN FOR DREAMING","601- GIRLS TOWN","602- INVASION U.S.A. with short: A DATE WITH YOUR FAMILY","603- THE DEAD TALK BACK with short: THE SELLING WIZARD","604- ZOMBIE NIGHTMARE","605- COLOSSUS AND THE HEADHUNTERS","606- THE CREEPING TERROR","607- BLOODLUST with short: UNCLE JIM'S DAIRY FARM","608- CODE NAME: DIAMOND HEAD with short: A DAY AT THE FAIR","609- THE SKY DIVERS with short: WHY STUDY THE INDUSTRIAL ARTS?","610- THE VIOLENT YEARS with short: YOUNG MAN'S FANCY","611- LAST OF THE WILD HORSES","612- THE STARFIGHTERS","613- THE SINISTER URGE with short: KEEPING CLEAN AND NEAT","614- SAN FRANCISCO INTERNATIONAL","615- KITTEN WITH A WHIP","616- RACKET GIRLS with short: ARE YOU READY FOR MARRIAGE?","617- THE SWORD AND THE DRAGON","618- HIGH SCHOOL BIG SHOT with short: OUT OF THIS WORLD","619- RED ZONE CUBA with short: SPEECH","620- DANGER! DEATH RAY","621- THE BEAST OF YUCCA FLATS with shorts: MONEY TALKS! and PROGRESS ISLAND, U.S.A.","622- ANGELS' REVENGE","623- THE AMAZING TRANSPARENT MAN with short: THE DAYS OF OUR LIVES","624- SAMSON VS. THE VAMPIRE WOMEN","701- NIGHT OF THE BLOOD BEAST with short: ONCE UPON A HONEYMOON","702- THE BRUTE MAN with short: THE CHICKEN OF TOMORROW","703- DEATHSTALKER AND THE WARRIORS FROM HELL","704- THE INCREDIBLE MELTING MAN","705- ESCAPE 2000","706- LASERBLAST","801- REVENGE OF THE CREATURE","802- THE LEECH WOMAN","803- THE MOLE PEOPLE","804- THE DEADLY MANTIS","805- THE THING THAT COULDN'T DIE","806- THE UNDEAD","807- TERROR FROM THE YEAR 5000","808- THE SHE CREATURE","809- I WAS A TEENAGE WEREWOLF","810- THE GIANT SPIDER INVASION","811- \"PARTS\": THE CLONUS HORROR","812- THE INCREDIBLY STRANGE CREATURES WHO STOPPED LIVING AND BECAME MIXED-UP ZOMBIES","813- JACK FROST","814- RIDING WITH DEATH","815- AGENT FOR H.A.R.M.","816- PRINCE OF SPACE","817- HORROR OF PARTY BEACH","818- DEVIL DOLL","819- INVASION OF THE NEPTUNE MEN","820- SPACE MUTINY","821- TIME CHASERS","822- OVERDRAWN AT THE MEMORY BANK","901- THE PROJECTED MAN","902- PHANTOM PLANET","903- PUMA MAN","904- WEREWOLF","905- THE DEADLY BEES","906- THE SPACE CHILDREN with short: CENTURY 21 CALLING","907- HOBGOBLINS","908- THE TOUCH OF SATAN","909- GORGO","910- THE FINAL SACRIFICE","911- DEVIL FISH","912- THE SCREAMING SKULL with short: ROBOT RUMPUS","913- QUEST OF THE DELTA KNIGHTS","1001- SOULTAKER","1002- THE GIRL IN GOLD BOOTS","1003- MERLIN'S SHOP OF MYSTICAL WONDERS","1004- FUTURE WAR","1005- BLOOD WATERS OF DR. Z","1006- BOGGY CREEK II","1007- TRACK OF THE MOON BEAST","1008- FINAL JUSTICE","1009- HAMLET","1010- IT LIVES BY NIGHT","1011- HORRORS OF SPIDER ISLAND","1012- SQUIRM with short: A CASE OF SPRING FEVER","1013- DIABOLIK"];
-// A map going from season names to episode lists
-var epMap = (function() {
-    var ret = {};
-    $$.each(epList, function(ep) {
-        var match = ep.match(/^(([K\d]\d?)\d{2})\-\s*(.*)$/i),
-            season = match[2],
-            number = match[1],
-            title = match[3];
-        if (!(season in ret)) {
-            ret[season] = [];
-        }
-        ret[season].push({
-            number: number,
-            title: title
-        });
-    })
-    return ret;
-})();
+// // Get a map of season names from the argument
+// function splitSeasonArg(arg) {
+//     var elems;
+//     if (arg.indexOf(",") != -1) {
+//         // Split along commas
+//         elems = arg.split(/,/);
+//     } else {
+//         // Take each character
+//         elems = [];
+//         arg = arg.replace(/10/, "A");
+//         for (var j = 0; j < arg.length; ++j) {
+//             elems.push(arg.charAt(j));
+//         }
+//     }
+//     // Assert these seasons in 'seasons'
+//     var elemMap = {};
+//     $$.each(elems, function(elem) {
+//         elemMap[elem] = true;
+//     });
+//     if ('A' in elemMap) {
+//         // Convert this to a '10'
+//         elemMap['10'] = elemMap.A;
+//         delete elemMap.A;
+//     }
+//     return elemMap;
+// }
 
-// Decode an episode reference from a number, returning a tuple of 'season' and 'number'
-function decodeEpNumber(str) {
-    var match = str.match(/^(k|\d{1,2})(\d{2})$/i);
-    return {
-        season: match[1],
-        number: parseInt(match[2].replace(/^0+(?=\d)/g, ""))
-    };
-}
-
-// Get a boolean map of all MST seasons
-function getSeasons() {
-    return {
-        "K": true,
-        "1": true,
-        "2": true,
-        "3": true,
-        "4": true,
-        "5": true,
-        "6": true,
-        "7": true,
-        "8": true,
-        "9": true,
-        "10": true
-    };
-}
-
-// Get a map of season names from the argument
-function splitSeasonArg(arg) {
-    var elems;
-    if (arg.indexOf(",") != -1) {
-        // Split along commas
-        elems = arg.split(/,/);
-    } else {
-        // Take each character
-        elems = [];
-        arg = arg.replace(/10/, "A");
-        for (var j = 0; j < arg.length; ++j) {
-            elems.push(arg.charAt(j));
-        }
-    }
-    // Assert these seasons in 'seasons'
-    var elemMap = {};
-    $$.each(elems, function(elem) {
-        elemMap[elem] = true;
+// Keep only the seasons represented in the search string
+function assertSeasons(seasons, searchStr) {
+    return $$.where(seasons, function(season) {
+        return searchStr.indexOf(season.searchName()) != -1;
     });
-    if ('A' in elemMap) {
-        // Convert this to a '10'
-        elemMap['10'] = elemMap.A;
-        delete elemMap.A;
-    }
-    return elemMap;
 }
 
-// Assert the seasons specified by 'arg' into 'seasons'
-function assertSeasons(seasons, arg) {
-    var elemMap = splitSeasonArg(arg);
-    $$.each(seasons, function(season, value) {
-        seasons[season] = season in elemMap && elemMap[season] === true;
+// Evict the seasons found in the search string
+function deassertSeasons(seasons, searchStr) {
+    return $$.where(seasons, function(season) {
+        return searchStr.indexOf(season.searchName()) == -1;
     });
-    return seasons;
-}
-
-// De-assert the seasons specified by 'arg' onto 'seasons'
-function deassertSeasons(seasons, arg) {
-    var elemMap = splitSeasonArg(arg);
-    $$.each(seasons, function(season, value) {
-        seasons[season] = !(season in elemMap) || elemMap[season] !== true;
-    });
-    return seasons;
-}
-
-// Get the episode list for the boolean-valued map of seasons
-//
-// parameters:
-//   asObjects: Whether to return objects instead of strings (default: false)
-function getEpList(seasons, asObjects) {
-    if (asObjects == null) {
-        asObjects = false;
-    }
-    var ret = [];
-    $$.each(seasons, function(season, value) {
-        if (value === true) {
-            ret = ret.concat(epMap[season]);
-        }
-    });
-    if (!asObjects) {
-        ret = $$.replace(ret, function(item) {
-            return item.number + " - " + item.title;
-        });
-    }
-    return ret;
-}
-
-// Returns the number of episodes in the season
-function nEpsInSeason(season) {
-    return epMap[season].length;
-}
-
-// class: Season
-// Stored as an integer or string and to be initialized from strings.
-function Season(val, eps) {
-    var _this = this,
-        _value = null,
-        _episodes = [];
-
-    function _ctor() {
-        if (val.match(/^\d+$/)) {
-            _value = parseInt(val);
-        } else {
-            _value = ("" + val).toUpperCase();
-        }
-        _episodes = $$.select(eps, function(ep) {
-            // 'ep' has the full number, so split out the episode number
-            var obj = decodeEpNumber(ep.number);
-            return new Episode(_this, obj.number, ep.title);
-        });
-        // console.log("Season: " + _value);
-        // $$.each(_episodes, function(ep, ix) {
-        //     console.log(ix + ": " + ep.toString());
-        // });
-    }
-
-    // Accessor to the episodes list
-    _this.episodes = function() { return _episodes; }
-    // The number of episodes that is in this season
-    _this.nEps = function() { return _episodes.length; }
-
-    // Get the next season after this one
-    _this.nextSeason = function() {
-        if (_value == "K") {
-            return Season.get("1");
-        } else if (_value == 10) {
-            return null;
-        } else {
-            return Season.get(_value + 1);
-        }
-    }
-    // Get the season before this one
-    _this.prevSeason = function() {
-        if (_value == "K") {
-            return null;
-        } else if (_value == 1) {
-            return Season.get("K");
-        } else {
-            return Season.get(_value - 1);
-        }
-    }
-    // Get the next episode after this one
-    _this.nextEpisode = function(ep) {
-        var ix = _episodes.indexOf(ep);
-        if (ix == -1) {
-            console.log("missing");
-            return null;
-        }
-        if (ix < _episodes.length - 1) {
-            return _episodes[ix + 1];
-        }
-        var nextSeason = _this.nextSeason();
-        return nextSeason == null ? null : nextSeason.episodes()[0];
-    }
-    // Get the episode before this one
-    _this.prevEpisode = function(ep) {
-        var ix = _episodes.indexOf(ep);
-        if (ix == -1) {
-            console.log("missing");
-            return null;
-        }
-        if (ix > 0) {
-            return _episodes[ix - 1];
-        }
-        var prevSeason = _this.prevSeason();
-        if (prevSeason== null) {
-            return null;
-        }
-        var eps = prevSeason.episodes();
-        return eps[eps.length - 1];
-    }
-
-    _this.toString = function() { return "" + _value; }
-
-
-    _ctor();
-}
-// Get a canonicalized 'Season' object for the given argument
-Season.get = (function() {
-    var _map;
-    return function(val) {
-        if (_map === undefined) {
-            _map = {};
-            // Create the seasons from the episode map
-            $$.each(epMap, function(season, eps) {
-                _map[season] = new Season(season, eps);
-            });
-        }
-        return _map[val];
-    };
-})();
-
-// class: Episode
-// An episode, which can be initialized from a string representation.
-function Episode(arg1, arg2, arg3) {
-    var _this = this,
-        // The 'Season' we are in
-        _season = null,
-        _number = -1,
-        _title = "";
-
-    function _ctor() {
-        if (arg1 != null && arg2 == null) {
-            // They sent us a string to parse
-            var match = arg1.match(/((k|\d{1,2}))(\d{2})/i);
-            _season = Season.get(match[1]);
-            _number = parseInt(match[3]);
-        } else if (arg1 != null && arg2 != null) {
-            // They sent us a season and episode independently
-            _season = arg1;
-            _number = parseInt(arg2);
-            _title = arg3;
-        } else {
-            throw new Error("Invalid 'Episode' construction");
-        }
-    }
-
-    _this.season = function() { return _season; }
-    _this.number = function() { return _number; }
-    _this.title = function() { return _title; }
-
-    // Return the next episode
-    _this.next = function() {
-        return _season.nextEpisode(_this);
-    }
-
-    // Return the previous episode
-    _this.prev = function() {
-        return _season.prevEpisode(_this);
-    }
-
-    _this.toString = function() {
-        return _season.toString() + (_number < 10 ? "0" : "") + _number;
-    }
-
-    _ctor();
-}
-// Return a list of episodes from the given string
-Episode.get = function(str) {
-    str = str.toUpperCase();
-    var obj = decodeEpNumber(str);
-    if (obj == null) {
-        return null;
-    }
-    var season = Season.get(obj.season);
-    if (season == null || obj.number < 0 || obj.number > season.nEps()) {
-        return null;
-    }
-    var ret = null;
-    $$.each(season.episodes(), function(ep) {
-        if (ep.toString() == str) {
-            ret = ep;
-            return true;
-        }
-    });
-    return ret;
-}
-// Gets all episodes in an array
-Episode.getAll = function(withKtma) {
-    var ret = [],
-        season = withKtma === true ? Season.get("K") : Season.get("1");
-    while (season != null) {
-        ret = ret.concat(season.episodes());
-        season = season.nextSeason();
-    }
-    return ret;
-}
-
-// Get the range of episodes expressed in a '314-22'-style string.
-//
-// parameters:
-//   str: The String to parse
-//
-// returns:
-//   A list of 'Episode' objects
-function getEpRange(str) {
-    var match = str.match(/([k\d]\d{2,3})\-(k?\d+)/i),
-        first = match[1],
-        last = match[2];
-    // If the 'last' match is too short, transplant from the 'first'
-    if (last.length <= 2) {
-        // Must transplant
-        last = first.substr(0, first.length - last.length) + last;
-    }
-    var firstEp = Episode.get(first),
-        lastEp = Episode.get(last);
-    if (firstEp == null) {
-        if (lastEp == null) {
-            return [];
-        } else {
-            return [lastEp];
-        }
-    } else {
-        if (lastEp == null) {
-            return [firstEp];
-        } else {
-            var ret = [firstEp],
-                next = firstEp;
-            while ((next = next.next()) != null) {
-                ret.push(next);
-                if (next == lastEp) {
-                    break;
-                }
-            }
-            return ret;
-        }
-    }
 }
 
 // Check for a request for a random MST3K episode
@@ -347,7 +56,8 @@ function checkMstConsole(value) {
         return;
     }
     var args = value.split(/\s+/),
-        seasons = getSeasons(),
+        show = Show.get("MST3K"),
+        seasons = show.seasons(),
         mode = "random",
         lookups = [],
         searchTerm,
@@ -356,11 +66,19 @@ function checkMstConsole(value) {
         var arg = args[i];
         if (arg.indexOf("-s=") === 0) {
             // Include only these seasons
-            assertSeasons(seasons, arg.substr(3));
+            seasons = assertSeasons(seasons, arg.substr(3));
+            // var str = arg.substr(3);
+            // seasons = $$.where(seasons, function(season) {
+            //     return str.indexOf(season.searchName()) != -1;
+            // });
             mode = "random";
         } else if (arg.indexOf("-ns=") === 0) {
             // They want to disallow these seasons
-            deassertSeasons(seasons, arg.substr(4));
+            seasons = deassertSeasons(seasons, arg.substr(4));
+            // var str = arg.substr(4);
+            // seasons = $$.where(seasons, function(season) {
+            //     return str.indexOf(season.searchName()) == -1;
+            // });
             mode = "random";
         } else if (arg.indexOf("-f=") === 0) {
             mode = "find";
@@ -372,7 +90,7 @@ function checkMstConsole(value) {
         } else if (arg.match(/^((k|\d{1,2})\d{2})\-(k?\d+)$/i)) {
             // They're interested in a range of episodes
             mode = "lookup";
-            $$.each(getEpRange(arg), function(ep) {
+            $$.each(show.getEpRange(arg), function(ep) {
                 lookups.push(ep.toString());
             });
         }
@@ -380,30 +98,36 @@ function checkMstConsole(value) {
 
     // Perform the user action
     if (mode == "random") {
-        var list = getEpList(seasons),
+        var list = Season.getEpisodes(seasons),
+        // getEpList(seasons),
             ix = Math.floor(list.length * Math.random());
-        return "Your random MST3K episode (from season" + (_keys(seasons).length > 1 ? "s" : "")
+        return "Your random " + show.name() + " episode (from season" + (_keys(seasons).length > 1 ? "s" : "")
             + " " + _englishJoin(_keys(seasons)) + ") is:<br/>\n"
             + list[ix];
     } else if (mode == "find") {
         // Display episodes that match 'searchTerm'
-        var list = $$.where(getEpList(seasons), function(item) {
-            return item.match(new RegExp(searchTerm, "i")) != null;
+        var regex = new RegExp(searchTerm, "i"),
+            list = $$.where(Season.getEpisodes(seasons), function(item) {
+            return item.match(regex) != null;
         });
-        return "Your search over '" + searchTerm + "' yielded:<br/>\n"
-            + list.join("<br/>\n");
+        return "Your search over '" + searchTerm + "' yielded:<br/>\n" + list.join("<br/>\n");
     } else if (mode == "lookup") {
         var str = "";
         $$.each(lookups, function(ep) {
-            ep = decodeEpNumber(ep);
-            var ep = epMap[ep.season][ep.number - 1],
-                randID = "search" + ("" + Math.random()).substr(2),
-                q = "mst3k " + ep.title.match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
+            //ep = decodeEpNumber(ep);
+            //var ep = epMap[ep.season][ep.number - 1],
+            if (!(ep = show.getEpisode(ep))) {
+                return;
+            }
+            var randID = "search" + ("" + Math.random()).substr(2),
+                q = show.name().toLowerCase() + " "
+                    + ep.title().match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
                     //+ "s" + ep.season + "e" + (ep.number < 10 ? "0" : "") + ep.number
                     //+ " " + name.match(/^([^a-z]*)/)[0].replace(/(^\s+|\s+$)/g,"");
-            str += (str.length > 0 ? "<br />\n" : "") + ep.number + " - " + ep.title;
+            str += (str.length > 0 ? "<br />\n" : "") + ep.toString() + " - " + ep.title();
 
             if (node) {
+                // In test mode, don't do anything more.
                 return;
             }
             console.log(q);
@@ -466,7 +190,7 @@ function checkMstConsole(value) {
                 });
             });
         });
-        return "The MST3K episode" + (lookups.length > 1 ? "s" : "") + " you requested "
+        return "The " + show.name() + " episode" + (lookups.length > 1 ? "s" : "") + " you requested "
             + (lookups.length > 1 ? "are" : "is") + ":<br />\n" + str;
     }
 }
@@ -496,56 +220,65 @@ function getMst3kModules() {
 
 function _keys(obj) {
     var ret = [];
-    $$.each(obj, function(key, value) {
-        if (value !== false) {
-            ret.push(key);
-        }
-    });
+    if (obj instanceof Array) {
+        $$.each(obj, function(elem) {
+            ret.push(elem instanceof Season ? elem.name() : elem);
+        });
+    } else {
+        $$.each(obj, function(key, value) {
+            if (value !== false) {
+                ret.push(key);
+            }
+        });
+    }
     return ret;
 }
 
 // Test operations on seasons
 function testSeasons(console) {
-    var seasons = getSeasons();
+    var show = Show.get("MST3K");
+    var seasons = show.seasons();
     // Test asserting and de-asserting seasons
     console.log(_keys(seasons));
-    console.log(_keys(splitSeasonArg("1234")));
-    console.log(_keys(splitSeasonArg("123456789A")));
-    console.log(_keys(splitSeasonArg("1,2,3,4,5,6,7,8,9,10")));
-    console.log(_keys(splitSeasonArg("AK")));
-    console.log(_keys(assertSeasons(getSeasons(), "1234")));
-    console.log(_keys(deassertSeasons(getSeasons(), "1234")));
-    console.log(_keys(assertSeasons(getSeasons(), "A")));
-    console.log(_keys(deassertSeasons(getSeasons(), "K")));
+    // console.log(_keys(splitSeasonArg("1234")));
+    // console.log(_keys(splitSeasonArg("123456789A")));
+    // console.log(_keys(splitSeasonArg("1,2,3,4,5,6,7,8,9,10")));
+    // console.log(_keys(splitSeasonArg("AK")));
+    //console.log("!!!");
+    console.log(_keys(assertSeasons(show.seasons(), "1234")));
+    console.log(_keys(deassertSeasons(show.seasons(), "1234")));
+    console.log(_keys(assertSeasons(show.seasons(), "A")));
+    console.log(_keys(deassertSeasons(show.seasons(), "K")));
 
     // Test episode list lengths
-    console.log("All: " + getEpList(getSeasons()).length);
-    console.log("Sans K: " + getEpList(deassertSeasons(getSeasons(), "K")).length);
-    console.log("Just 10: " + getEpList(assertSeasons(getSeasons(), "A")).length);
-    console.log("Just 2,8: " + getEpList(assertSeasons(getSeasons(), "2,8")).length);
+    console.log("All: " + Season.getEpisodes(seasons).length);
+    console.log("Sans K: " + Season.getEpisodes(deassertSeasons(seasons, "K")).length);
+    console.log("Just 10: " + Season.getEpisodes(assertSeasons(seasons, "A")).length);
+    console.log("Just 2,8: " + Season.getEpisodes(assertSeasons(seasons, "2,8")).length);
 
-    // Test decoding episode numbers
-    console.log(JSON.stringify(decodeEpNumber("k01")));
-    console.log(JSON.stringify(decodeEpNumber("k02")));
-    console.log(JSON.stringify(decodeEpNumber("101")));
-    console.log(JSON.stringify(decodeEpNumber("313")));
-    console.log(JSON.stringify(decodeEpNumber("1001")));
-    console.log(JSON.stringify(decodeEpNumber("1013")));
-    console.log(JSON.stringify(decodeEpNumber("717")));
-    console.log(JSON.stringify(decodeEpNumber("1009")));
+    // // Test decoding episode numbers
+    // console.log(JSON.stringify(decodeEpNumber("k01")));
+    // console.log(JSON.stringify(decodeEpNumber("k02")));
+    // console.log(JSON.stringify(decodeEpNumber("101")));
+    // console.log(JSON.stringify(decodeEpNumber("313")));
+    // console.log(JSON.stringify(decodeEpNumber("1001")));
+    // console.log(JSON.stringify(decodeEpNumber("1013")));
+    // console.log(JSON.stringify(decodeEpNumber("717")));
+    // console.log(JSON.stringify(decodeEpNumber("1009")));
 }
 
 // Test querying for an episode range
 function testEpRange(console) {
-    console.log(getEpRange("314-22"));
-    console.log(getEpRange("301-05"));
-    console.log(getEpRange("301-10"));
-    console.log(getEpRange("309-11"));
-    console.log(getEpRange("K01-19"));
-    console.log(getEpRange("K00-1"));
-    console.log(getEpRange("K21-103"));
-    console.log(getEpRange("620-802"));
-    //console.log(getEpRange("301-308"));
+    var show = Show.get("MST3K");
+    console.log(show.getEpRange("314-22"));
+    console.log(show.getEpRange("301-05"));
+    console.log(show.getEpRange("301-10"));
+    console.log(show.getEpRange("309-11"));
+    console.log(show.getEpRange("K01-19"));
+    console.log(show.getEpRange("K00-1"));
+    console.log(show.getEpRange("K21-103"));
+    console.log(show.getEpRange("620-802"));
+    //console.log(show.getEpRange("301-308"));
 }
 
 // Test full queries
@@ -559,6 +292,19 @@ function testQueries(console) {
 
 // Verify the contents of the episode map
 function testEpMap(console) {
+    var show = Show.get("MST3K"),
+        eps = show.getAllEpisodes(),
+        epMap = {};
+    $$.each(eps, function(ep) {
+        var seasonName = ep.season().name();
+        if (!(seasonName in epMap)) {
+            epMap[seasonName] = [];
+        }
+        epMap[seasonName].push({
+            number: ep.toString(),
+            title: ep.title()
+        });
+    });
     console.log(JSON.stringify(epMap));
     $$.each(epMap, function(key, value) {
         console.log(key + " => " + value.length);
@@ -568,7 +314,7 @@ function testEpMap(console) {
 // Test building 'Episode' objects
 function testEpisodes(console) {
     function print(ep) {
-        var ep1 = Episode.get(ep);
+        var ep1 = show.getEpisode(ep);
         if (ep1 == null) {
             console.log("'" + ep + "' not found.");
         } else {
@@ -580,6 +326,7 @@ function testEpisodes(console) {
             console.log(kernel(ep.prev()) + " ===> " + kernel(ep) + " ===> " + kernel(ep.next()));
         }
     }
+    var show = Show.get("MST3K");
     print("K01");
     print("K22");
     print("101");
