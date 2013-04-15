@@ -125,6 +125,8 @@ function Show(name, epsList) {
             }
         }
     }
+    // Gets the name of the show.
+    _this.toString = function() { return name; }
 
 
     _ctor();

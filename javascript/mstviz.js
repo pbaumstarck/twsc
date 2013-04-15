@@ -7,6 +7,174 @@ if (node) {
     Show = shows.Show;
 }
 
+// class: DateViews
+// Holds views for a date.
+function Watch(date, episode) {
+  var _this = this;
+
+  _this.date = function() { return date; }
+  _this.views = function() { return views; }
+}
+
+
+// class: WatchRecord
+// A record of watching things for a show.
+function WatchRecord() {
+  var _this = this,
+    _shows = [],
+    _pattern = /(^|\s)(([\w\d][\w\d]?)\d{2})\s*\-\s*((\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*))(\s*[\,\;]\s*(\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*)))*)/i,
+    // A map going from keyed dates ('2013-04-03') to lists of episode--show--date
+    // triplets.
+    _watches = [],
+    _btws = [];
+    // _datesToViews = {},
+    // // A map going from show--episode names ('MST3K-101') to lists of episode--
+    // // show--date triplets.
+    // _epsToViews = {};
+
+  // Return the shows that are stored internally.
+  _this.shows = function() { return _shows; }
+  // List of all the shows we have watches for.
+  _this.getShows = function() {
+    var showSet = {};
+    $$.each(_shows, function(show) {
+      showSet[show.toString()] = true;
+    });
+    return $$.toArray(showSet, function(key, value) { return key; });
+  }
+  // The number of watches that we have.
+  _this.nWatches = function() { return _watches.length; }
+  // Public accessor to the watches list.
+  _this.watches = function() { return _watches; }
+  // The list of our BTW strings.
+  _this.btws = function() { return _btws; }
+
+  // function: _getDateKey
+  // Get a string key to use for a date, e.g., '2013-04-10'
+  function _getDateKey(date) {
+    var gi;
+    return date.getFullYear() + "-"
+      + ((gi = date.getMonth() + 1) < 10 ? "0" + gi : gi) + "-"
+      + ((gi = date.getDate()) < 10 ? "0" + gi : gi);
+  }
+
+  // function: addWatches
+  // Add the processed watches to the record.
+  _this.addWatches = function(obj) {
+    if (obj instanceof WatchRecord) {
+      _shows = _shows.concat(obj.shows())
+      _watches = _watches.concat(obj.watches());
+      return;
+    }
+    var show = Show.get(obj.show) || obj.show,
+      hasShow = typeof show != "string",
+      showKey = hasShow ? show.toString() : obj.show,
+      watches = obj.body;
+    if (obj.btws) {
+      _btws = _btws.concat(obj.btws);
+    }
+    _shows.push(show);
+
+    var value = obj.body;
+    //console.log("Le value: " + value);
+    while ((match = _pattern.exec(value))) {
+      var number = match[2],
+        dates = match[4],
+        ep = hasShow ? show.getEpisode(number) : number;
+      //console.log("Matched: " + match[2] + ": " + match[4]);
+      // Parse all dates
+      var subValue = match[0],
+        datePattern = /(\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2})(r|q|t\d*)/i,
+        subMatch;
+      while ((subMatch = datePattern.exec(subValue)) != null) {
+        _watches.push({
+          show: show,
+          episode: ep,
+          date: new Date(subMatch[1]),
+          kind: subMatch[2]
+        });
+          //watchKind = subMatch[2],
+          // dateKey = _getDateKey(date);
+        // var fullEpKey = showKey + "::" + epKey;
+        // if (!(fullEpKey in _epsToViews)) {
+        //   _epsToViews[fullEpKey] = [];
+        // }
+        // _epsToViews[fullEpKey].push(tuple);
+        // if (!(dateKey in _datesToViews)) {
+        //   _datesToViews[fullEpKey] = [];
+        // }
+        // _datesToViews[fullEpKey].push(tuple);
+        subValue = subValue.substr(subMatch.index + subMatch[0].length + 1);
+      }
+      value = value.substr(match.index + match[0].length + 1);
+    }
+  }
+
+  function _getGrouped(keyKernel, ctorKernel, updateKernel, asList) {
+    var groupedMap = {};
+    $$.each(_watches, function(tuple) {
+      var key = keyKernel(tuple);//_getDateKey(tuple.date);
+      if (!(key in groupedMap)) {
+        groupedMap[key] = ctorKernel(tuple);//{
+        //   date: key,
+        //   views: []
+        // };
+      }
+      // groupedMap[key].views.push(tuple);
+      updateKernel(groupedMap[key], tuple);
+    });
+    if (asList === true) {
+      return $$.toArray(groupedMap, function(key, value) { return value; });
+    }
+    return groupedMap;
+  }
+
+  // Get the list of all views grouped by date.
+  _this.getGroupedByDate = function(asList) {
+    return _getGrouped(
+        function(tuple) { return _getDateKey(tuple.date); },
+        function(tuple) { return { date: _getDateKey(tuple.date), views: [] }; },
+        function(elem, tuple) { elem.views.push(tuple); },
+        asList);
+  }
+
+  // Get the list of all views grouped by episode.
+  _this.getGroupedByEpisode = function(asList) {
+    var keyKernel = function(tuple) {
+      return (tuple.show ? tuple.show.toString() : "NULL") + "::" +
+          (tuple.episode ? tuple.episode.toString() : "NULL");
+    },
+      ctorKernel = function(tuple) {
+      return {
+        ep: tuple.episode,
+        show: tuple.show,
+        views: []
+      };
+    },
+      grouped = _getGrouped(
+        keyKernel,
+        ctorKernel,
+        function(elem, tuple) { elem.views.push(tuple.date); },
+        false);
+    // Fill in the missing episodes for every show.
+    $$.each(_shows, function(show) {
+      $$.each(show.getAllEpisodes(), function(ep) {
+        var tuple = {
+          show: show,
+          episode: ep
+        },
+          key = keyKernel(tuple);
+        if (!(key in grouped)) {
+          grouped[key] = ctorKernel(tuple);
+        }
+      });
+    });
+    if (asList === true) {
+      return $$.toArray(grouped, function(key, value) { return value; });
+    }
+    return grouped;
+  }
+}
 
 // Return the modules that do MST3K visualization
 function getMst3kVizModules() {
@@ -24,7 +192,7 @@ function drawCalendar(div, rows) {
       height = 136,
       cellSize = 17; // cell size
 
-  // Get the min and max dates
+  // Get the min and max years.
   var minYear = -1,
     maxYear = -1,
     maxViews = 1;
@@ -120,68 +288,62 @@ function drawCalendar(div, rows) {
       .attr("class", function(d) { return "day " + color(data[d]); })
     .select("title")
       .text(function(d) { return d + ": " + data[d]; });
+}
 
-  // d3.select(self.frameElement).style("height", "2910px");
+function sortEpList(epList, mode) {
+  var mostWatched = mode == "mostWatched",
+    leastWatched = mode == "leastWatched",
+    byCount = mostWatched || leastWatched,
+    mostRecent = mode == "mostRecent",
+    leastRecent = mode == "leastRecent",
+    byRecent = mostRecent || leastRecent;
+  if (!byCount && !byRecent) {
+    throw new Error("Invalid mode: '" + mode + "'");
+  }
+  epList.sort(function(a, b) {
+    var gi;
+    if (byCount && (gi = a.views.length - b.views.length) != 0) {
+      return mostWatched ? -gi : gi;
+    }
+    // Check out the recency.
+    var i = a.views.length - 1,
+      j = b.views.length - 1;
+    while (i >= 0 && j >= 0) {
+      if ((gi = a.views[i] - b.views[j]) != 0) {
+        return mostWatched || mostRecent ? -gi : gi;
+      }
+      --i;
+      --j;
+    }
+    if (i >= 0) {
+      // 'i' had more watches.
+      return mostWatched || mostRecent ? -1 : 1;
+    } else if (j >= 0) {
+      // 'j' had more watches.
+      return mostWatched || mostRecent ? 1 : -1;
+    } else {
+      return 0;
+    }
+  });
 }
 
 function checkMstViz(value) {
-  var show = Show.get("MST3K");
-  var pattern = /(^|\s)(([\w\d]{1,2})\d{2})\s*\-\s*((\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*))(\s*[\,\;]\s*(\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}(r|q|t\d*))))/i;
-  var rows = [],
-    leDates = {},
-    // A map going from 'Episode' strings to convenience objects of '{ ep: {Episode}, views: [{Date}+] }'
-    epViews = {};
-  // And seed that with all episodes
-  $$.each(show.getAllEpisodes(), function(ep) {
-    epViews[ep.toString()] = {
-      ep: ep,
-      views: []
-    };
-  });
-
-  while ((match = pattern.exec(value))) {
-    var number = match[2],
-      dates = match[4],
-      ep = show.getEpisode(number);
-    if (ep) {
-      // Parse all dates
-      var subValue = match[0],
-        datePattern = /(\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2})(r|q|t\d*)/i,
-        subMatch;
-      while ((subMatch = datePattern.exec(subValue)) != null) {
-        var date = new Date(subMatch[1]),
-          watchKind = subMatch[2],
-          gi,
-          key = date.getFullYear() + "-"
-            + ((gi = date.getMonth() + 1) < 10 ? "0" + gi : gi) + "-"
-            + ((gi = date.getDate()) < 10 ? "0" + gi : gi);
-        epViews[ep.toString()].views.push(date);
-        if (!(key in leDates)) {
-          leDates[key] = {
-            date: key,
-            views: []
-          };
-          rows.push(leDates[key]);
-        }
-        leDates[key].views.push(1);
-        subValue = subValue.substr(subMatch.index + subMatch[0].length + 1);
-      }
+  var records = parseShowRecords(value);
+  var allWatchRecord = new WatchRecord();
+  $$.each(records, function(record) {
+    if (record.getShows().join("-") == "MST3K") {
+      allWatchRecord.addWatches(record);
     }
-    value = value.substr(match.index + match[0].length + 1);
-  }
-  // Sort all the views by date ascending
-  $$.each(epViews, function(key, value) {
-    value.views.sort(function(a, b) {
-      return (+a) - (+b);
-    });
+    //console.log(record.getShows() + record.nWatches());
   });
 
   if (!node) {
     setTimeout(function() {
-      drawCalendar('calendar', rows);
+      drawCalendar('calendar', allWatchRecord.getGroupedByDate(true));// rows);
 
-      // Convert 'epViews' to a list
-      var epList = $$.toArray(epViews),
+      var epList = allWatchRecord.getGroupedByEpisode(true),
+      // // Convert 'epViews' to a list
+      // var epList = $$.toArray(epViews),
         str = [],
         // Get an episode listing in simple form
         epKernel = function(epListElem, prefix) {
@@ -206,16 +368,18 @@ function checkMstViz(value) {
             prefix = prefix.getFullYear() + "." + (prefix.getMonth() + 1) + "."
               + prefix.getDate();
           }
-          return '<i>' + prefix + '</i> &ndash; ' + epListElem.ep.toString()
-            + ' ' + epListElem.ep.title();
+          return '<i>' + prefix + '</i> &ndash; ' + (epListElem.ep == null ?
+              'NULL' : epListElem.ep.toString() + ' ' + epListElem.ep.title());
         };
+      //console.log("epList.length: " + epList.length);
 
       var divWidth = 250;
       // Fill in the 'stats' thing
-      // - Most watched
-      epList.sort(function(a, b) {
-        return -(a.views.length - b.views.length);
-      });
+      // // - Most watched
+      // epList.sort(function(a, b) {
+      //   return -(a.views.length - b.views.length);
+      // });
+      sortEpList(epList, "mostWatched");
       str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Most watched:</b>');
       var mostWatched = [];
       for (var i = 0; i < 5 && i < epList.length; ++i) {
@@ -226,16 +390,18 @@ function checkMstViz(value) {
       // - Least watched
       str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Least watched:</b>');
       var mostWatched = [];
-      for (var i = epList.length - 1; i >= epList.length - 5 && i >= 0; --i) {
+      sortEpList(epList, "leastWatched");
+      for (var i = 0; i < 5 && i < epList.length; ++i) {
         str.push('<br />' + epKernel(epList[i], "viewCount"));
       }
       str.push('</div>');
 
       // - Most recently watched
-      epList.sort(function(a, b) {
-        return -((a.views.length ? a.views[a.views.length - 1] : 0)
-          - (b.views.length ? b.views[b.views.length - 1] : 0));
-      });
+      // epList.sort(function(a, b) {
+      //   return -((a.views.length ? a.views[a.views.length - 1] : 0)
+      //     - (b.views.length ? b.views[b.views.length - 1] : 0));
+      // });
+      sortEpList(epList, "mostRecent");
       str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Most recently watched:</b>');
       var mostWatched = [];
       for (var i = 0; i < epList.length && i < 5; ++i) {
@@ -244,16 +410,16 @@ function checkMstViz(value) {
       str.push('</div>');
 
       // - Least recently watched
-      epList.sort(function(a, b) {
-        return (a.views.length ? a.views[0] : 0) - (b.views.length ? b.views[0] : 0);
-      });
+      // epList.sort(function(a, b) {
+      //   return (a.views.length ? a.views[0] : 0) - (b.views.length ? b.views[0] : 0);
+      // });
+      sortEpList(epList, "leastRecent");
       str.push('<div style="float: left; width: ' + divWidth + 'px;"><b>Least recently watched:</b>');
       var mostWatched = [];
       for (var i = 0; i < epList.length && i < 5; ++i) {
         str.push('<br />' + epKernel(epList[i], "leastRecent"));
       }
       str.push('</div>');
-
 
       // Fill in the 'div'
       $('#stats').html(str.join(""));
@@ -274,12 +440,12 @@ function testMstViz(console) {
 function parseShowRecords(value) {
   var ret = [];
   var ix = -1;
-  while ((ix = testValue.indexOf("^^^", ix + 1)) != -1) {
-    var ix2 = testValue.indexOf("$$$", ix + 3);
+  while ((ix = value.indexOf("^^^", ix + 1)) != -1) {
+    var ix2 = value.indexOf("$$$", ix + 3);
     if (ix2 == -1) {
       break;
     }
-    var segments = testValue.substring(ix + 3, ix2).
+    var segments = value.substring(ix + 3, ix2).
       replace(/(^\s+|\s+$)/g, "").
       split(/\s+\:\:\s+/),
       obj;
@@ -305,7 +471,9 @@ function parseShowRecords(value) {
       };
     }
     // Look for '::' delimiters
-    ret.push(obj);
+    var record = new WatchRecord();
+    record.addWatches(obj);
+    ret.push(record);
   }
   return ret;
 }
@@ -313,8 +481,8 @@ function parseShowRecords(value) {
 function testParseShowRecords(console) {
   var records = parseShowRecords(testValue);
   $$.each(records, function(record) {
-    console.log(record.show + ": " + record.body.length
-      + ", BTW's: " + (record.btws ? record.btws.join(",") : "None"));
+    console.log(record.getShows().join(",") + ": " + record.nWatches()
+      + ", BTW's: " + record.btws().join(","));
   });
 }
 
