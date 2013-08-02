@@ -3,9 +3,10 @@
     <head>
         <title>Twin-Screw Universal Controller</title>
         <link rel="stylesheet" type="text/css" href="/css/main.css">
+        <link rel="stylesheet" type="text/css" href="/css/dc.css">
         {% if compiled %}
             <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
-            <script src="http://d3js.org/d3.v3.min.js"></script>
+            <script type="text/javascrtip" src="http://d3js.org/d3.v3.min.js"></script>
             <script type="text/javascript" src="https://www.google.com/jsapi"></script>
             <script type="text/javascript" src="/javascript/compiled.js"></script>
             <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
@@ -14,10 +15,12 @@
             </script>
         {% else %}
             <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
-            <script src="http://d3js.org/d3.v3.min.js"></script>
+            <script type="text/javascrtip" src="http://d3js.org/d3.v3.min.js"></script>
             <script type="text/javascript" src="https://www.google.com/jsapi"></script>
             <script type="text/javascript" src="/javascript/auth.js"></script>
             <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+            <script type="text/javascript" src="/javascript/crossfilter.min.js"></script>
+            <script type="text/javascript" src="/javascript/dc.min.js"></script>
             <script type="text/javascript" src="/javascript/jstz.min.js"></script>
             <script type="text/javascript" src="/javascript/Limiter.js"></script>
             <script type="text/javascript" src="/javascript/shows.js"></script>
@@ -25,6 +28,11 @@
             <script type="text/javascript" src="/javascript/colors.js"></script>
             <script type="text/javascript" src="/javascript/numbers.js"></script>
             <script type="text/javascript" src="/javascript/plots.js"></script>
+            <script type="text/javascript" src="/javascript/mstmeta.js"></script>
+            <script type="text/javascript" src="/javascript/showrecord.js"></script>
+            <script type="text/javascript" src="/javascript/drawcalendar.js"></script>
+            <script type="text/javascript" src="/javascript/leftjoin.js"></script>
+            <script type="text/javascript" src="/javascript/watchrecord.js"></script>
             <script type="text/javascript" src="/javascript/mst3k.js"></script>
             <script type="text/javascript" src="/javascript/mstviz.js"></script>
             <script type="text/javascript" src="/javascript/site.js"></script>

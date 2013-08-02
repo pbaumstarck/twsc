@@ -3,4 +3,40 @@ body {
     font-family: Verdana;
 }
 
+.dc-charts > div {
+  float: left;
+}
 
+.eps-table {
+  display: table;
+}
+
+.eps-row {
+  display: table-row;
+}
+
+.eps-row > div {
+  display: table-cell;
+  padding: 0 4px;
+}
+
+.eps-row .count {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.eps-row .count,
+.eps-row .number {
+  text-align: right;
+}
+
+.eps-row .title {
+  width: 200px;
+  overflow: hidden;
+}
+
+.dc-chart g text.pie-slice,
+.dc-chart g text.row,
+.dc-chart g.row text.row {
+  fill: black;
+}
