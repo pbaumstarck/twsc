@@ -64,6 +64,7 @@ var totalWatchesByCrowChart;
 var totalWatchesByTomChart;
 var totalWatchesByMadChart;
 var totalWatchesByKindChart;
+var epsByCountChart;
 
 function checkMstViz(value) {
   var records = parseShowRecords(value);
@@ -79,6 +80,7 @@ function checkMstViz(value) {
       var watches = allWatchRecord.getWatchesJson();
       var epsMeta = getMst3kEpisodesMeta();
       watches = leftJoin(watches, epsMeta, ["episode"]);
+      var originalWatches = watches;
       watches = crossfilter(watches);
       // Define group all for counting.
       var all = watches.groupAll();
@@ -87,27 +89,39 @@ function checkMstViz(value) {
       var dateDimGroup = dateDim.group();
 
       var seasonDim = watches.dimension(function(w) { return w.season; });
-      var seasonDimGroup = seasonDim.group();
+      var seasonDimGroup = seasonDim.group();//.reduceSum(function(w) { return 5; });
       totalWatchesBySeasonChart = dc.rowChart("#total-watches-by-season")
           .width(240).height(330)
-          .group(seasonDimGroup)
-          .dimension(seasonDim)
+          .dimension(seasonDim).group(seasonDimGroup)
           .margins({top: 20, left: 10, right: 10, bottom: 20})
           .renderTitle(true);
 
       var epDim = watches.dimension(function(w) { return w.episode; });
       var epDimGroup = epDim.group();
+      var epsByCount = epDimGroup.reduceCount().all();
+      var countsMap = {};
+      $$.each(epsByCount, function(obj) {
+        countsMap[obj.key] = obj.value;
+      });
+      // console.log(countsMap);
+      // console.log(epsByCount);
+      $$.each(originalWatches, function(w) { w.watchCount = countsMap[w.episode]; });
+      // console.log(originalWatches);
 
       var pieSize = {
-        width: 280,
+        width: 320,
         height: 200,
         radius: 90,
         innerRadius: 40
       };
 
-      var pieTitle = function(d) {
-        return d.data.key + " (" +
-            Math.floor(d.data.value / all.value() * 100) + "%)";
+      var pieTitle = function(chart, d) {
+        if (chart.hasFilter() && !chart.hasFilter(d.data.key)) {
+          return d.data.key + "(0%)";
+        } else {
+          return d.data.key + " - " + Math.round(d.data.value) + " (" +
+              Math.floor(d.data.value / all.value() * 100) + "%)";
+        }
       };
       var hostDim = watches.dimension(function(w) { return w.host; });
       var hostDimGroup = hostDim.group();
@@ -118,7 +132,8 @@ function checkMstViz(value) {
             .innerRadius(pieSize.innerRadius)
             .dimension(hostDim).group(hostDimGroup)
             .renderLabel(true).renderTitle(true)
-            .label(pieTitle).title(pieTitle);
+            .label(function(d) { return pieTitle(totalWatchesByHostChart, d); })
+            .title(function(d) { return pieTitle(totalWatchesByHostChart, d); });
 
       var crowDim = watches.dimension(function(w) { return w.Crow; });
       var crowDimGroup = crowDim.group();
@@ -129,7 +144,8 @@ function checkMstViz(value) {
             .innerRadius(pieSize.innerRadius)
             .dimension(crowDim).group(crowDimGroup)
             .renderLabel(true).renderTitle(true)
-            .label(pieTitle).title(pieTitle);
+            .label(function(d) { return pieTitle(totalWatchesByCrowChart, d); })
+            .title(function(d) { return pieTitle(totalWatchesByCrowChart, d); });
 
       var tomDim = watches.dimension(function(w) { return w.Tom; });
       var tomDimGroup = tomDim.group();
@@ -140,7 +156,8 @@ function checkMstViz(value) {
             .innerRadius(pieSize.innerRadius)
             .dimension(tomDim).group(tomDimGroup)
             .renderLabel(true).renderTitle(true)
-            .label(pieTitle).title(pieTitle);
+            .label(function(d) { return pieTitle(totalWatchesByTomChart, d); })
+            .title(function(d) { return pieTitle(totalWatchesByTomChart, d); });
 
       var madDim = watches.dimension(function(w) { return w.Mads[0]; });
       var madDimGroup = madDim.group();
@@ -151,7 +168,8 @@ function checkMstViz(value) {
             .innerRadius(pieSize.innerRadius)
             .dimension(madDim).group(madDimGroup)
             .renderLabel(true).renderTitle(true)
-            .label(pieTitle).title(pieTitle);
+            .label(function(d) { return pieTitle(totalWatchesByMadChart, d); })
+            .title(function(d) { return pieTitle(totalWatchesByMadChart, d); });
 
       var kindDim = watches.dimension(function(w) { return w.kind; });
       var kindDimGroup = kindDim.group();
@@ -162,7 +180,24 @@ function checkMstViz(value) {
             .innerRadius(pieSize.innerRadius)
             .dimension(kindDim).group(kindDimGroup)
             .renderLabel(true).renderTitle(true)
-            .label(pieTitle).title(pieTitle);
+            .label(function(d) { return pieTitle(totalWatchesByKindChart, d); })
+            .title(function(d) { return pieTitle(totalWatchesByKindChart, d); });
+
+      // var epsByCount = crossfilter(epDimGroup.reduceCount().all());
+      // var epsByCountDim = epsByCount.dimension(function(v) { return v.value; });
+      var epsByCountDim = watches.dimension(function(w) { return w.watchCount; });
+      var epsByCountGroup = epsByCountDim.group().
+          reduceSum(function(w) { return 1.0 / w.watchCount; });
+      // console.log(epsByCountGroup.reduceCount().all());
+      epsByCountChart = dc.pieChart("#eps-by-watch-count")//, "chartGroup")
+            .width(pieSize.width).height(pieSize.height)
+            .transitionDuration(500)
+            .radius(pieSize.radius)
+            .innerRadius(pieSize.innerRadius)
+            .dimension(epsByCountDim).group(epsByCountGroup)
+            .renderLabel(true).renderTitle(true)
+            .label(function(d) { return pieTitle(epsByCountChart, d); })
+            .title(function(d) { return pieTitle(epsByCountChart, d); });
 
       dc.renderAll();
 
@@ -172,11 +207,14 @@ function checkMstViz(value) {
               return ''
                   + '<div class="eps-row">'
                       + '<div class="count">' + ep.value + '</div>'
+                      + '<div class="thumbnail">'
+                          + '<img src="/imgs/mst3k/' + ep.key + '.jpg" />'
+                      + '</div>'
                       + '<div class="number">' + ep.key + '</div>'
                       + '<div class="title">' + ep.title + '</div>'
                   + '</div>';
             }).join('')
-            + '</div>'
+            + '</div>';
       };
       totalWatchesBySeasonChart.renderlet(function() {
         drawCalendar('calendar', dateDimGroup.reduceCount().all());
@@ -186,6 +224,7 @@ function checkMstViz(value) {
             epDimGroup.reduceCount().top(limit), epsMeta,
             [{left: "key", right: "episode"}]);
         $("#most-watched-eps").html(renderEpsList(topEps));
+
         var bottomEps = epDimGroup.reduceCount().top(Infinity);
         // console.log(JSON.stringify(bottomEps));
         bottomEps.reverse();
@@ -194,6 +233,49 @@ function checkMstViz(value) {
             bottomEps, epsMeta,
             [{left: "key", right: "episode"}]);
         $("#least-watched-eps").html(renderEpsList(bottomEps));
+
+        // Calculate which episodes were the first to reach certain numbers
+        // of views.
+        var byEps = allWatchRecord.getGroupedByEpisode();
+        var viewLines = [];
+        // <{ep: !Episode, show: !Show, views: !Array.<Date>}>
+        var maxViews = _.max(byEps, function(ep) { return ep.views.length; }).
+            views.length;
+        for (var numViews = maxViews; numViews >= 1; --numViews) {
+          // Isolate all eps with at least that many views.
+          var eps1 = _.filter(byEps, function(ep) {
+            return ep.views.length >= numViews;
+          });
+          // And isolate only the 'numViews'th view date.
+          eps1 = _.map(eps1, function(ep) {
+            return {
+              ep: ep.ep,
+              views: ep.views[numViews - 1]
+            };
+          });
+          // Sort by that.
+          eps1 = _.sortBy(eps1, function(ep) { return +ep.views; });
+          // Keep only the top five.
+          eps1 = eps1.slice(0, 5);
+          viewLines.push(
+              '<div class="eps-to-count">'
+                  + '<div class="count">' + numViews + '</div>'
+                  + _.map(eps1, function(ep, ix) {
+                    var number = ep.ep.toString();
+                    return ''
+                        + '<div class="ep-for-count">'
+                            // + '<div class="place place-' + (ix + 1) + '"></div>'
+                            + '<div class="thumbnail place-' + (ix + 1) + '">'
+                                + '<img src="/imgs/mst3k/' + number + '.jpg" '
+                                    + 'title="' + ep.ep.title() + '" />'
+                            + '</div>'
+                            + '<div class="number">' + number + '</div>'
+                        + '</div>';
+                  }).join('\n')
+              + '</div>');
+          console.log(viewLines);
+        }
+        $("#first-to-watch-count").html(viewLines.join('<br>'));
       });
     }, 1);
   }
@@ -236,6 +318,12 @@ function checkMstViz(value) {
                   + 'style="display: none;">reset</a>'
               + '<div class="clearfix"></div>'
           + '</div>'
+          + '<div id="eps-by-watch-count">'
+              + '<strong>Number of Episodes by Watch Count</strong>'
+              + '<a class="reset" href="javascript:epsByCountChart.filterAll();dc.redrawAll();" '
+                  + 'style="display: none;">reset</a>'
+              + '<div class="clearfix"></div>'
+          + '</div>'
           + '<br style="clear: both;">'
           + '<div>'
               + '<strong>Most Watched Episodes</strong>'
@@ -244,6 +332,10 @@ function checkMstViz(value) {
           + '<div>'
               + '<strong>Least Watched Episodes</strong>'
               + '<div id="least-watched-eps"></div>'
+          + '</div>'
+          + '<div>'
+              + '<strong>First to Watch Count</strong>'
+              + '<div id="first-to-watch-count"></div>'
           + '</div>'
       + '</div>';
 }

@@ -13,11 +13,12 @@ body {
 
 .eps-row {
   display: table-row;
+  border: 1px dashed black;
 }
 
 .eps-row > div {
   display: table-cell;
-  padding: 0 4px;
+  padding: 5px 4px 0;
 }
 
 .eps-row .count {
@@ -30,6 +31,11 @@ body {
   text-align: right;
 }
 
+.eps-row .thumbnail img {
+  height: 20px;
+  margin-bottom: -5px;
+}
+
 .eps-row .title {
   width: 200px;
   overflow: hidden;
@@ -39,4 +45,39 @@ body {
 .dc-chart g text.row,
 .dc-chart g.row text.row {
   fill: black;
+}
+
+.eps-to-count {
+  margin: 12px;
+}
+
+.eps-to-count .count {
+  float: left;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.eps-to-count .ep-for-count {
+  float: left;
+  width: 72px;
+}
+
+.eps-to-count .ep-for-count .thumbnail img {
+  border: 2px solid white;
+  float: left;
+  height: 20px;
+  max-width: 26px;
+  margin: 0 4px -5px 0;
+}
+
+.eps-to-count .ep-for-count .thumbnail.place-1 img {
+  border-color: gold;
+}
+
+.eps-to-count .ep-for-count .thumbnail.place-2 img {
+  border-color: silver;
+}
+
+.eps-to-count .ep-for-count .thumbnail.place-3 img {
+  border-color: #cc9966;
 }

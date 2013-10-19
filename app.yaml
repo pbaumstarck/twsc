@@ -16,4 +16,3 @@ handlers:
 
 - url: /.*
   script: twsc.app
-  login: required
